@@ -35,6 +35,8 @@ const GameStates = {
 };
 
 const Game = {
+	baseWidth: 640,
+	baseHeight: 960,
 	width: 640,
 	height: 960,
 	elements: {
@@ -78,23 +80,23 @@ const Game = {
 	},
 
 	fruitSizes: [
-		{ radius: 24,  scoreValue: 1,  img: './assets/img/circle0.png'  },
-		{ radius: 32,  scoreValue: 3,  img: './assets/img/circle1.png'  },
-		{ radius: 40,  scoreValue: 6,  img: './assets/img/circle2.png'  },
-		{ radius: 56,  scoreValue: 10, img: './assets/img/circle3.png'  },
-		{ radius: 64,  scoreValue: 15, img: './assets/img/circle4.png'  },
-		{ radius: 72,  scoreValue: 21, img: './assets/img/circle5.png'  },
-		{ radius: 84,  scoreValue: 28, img: './assets/img/circle6.png'  },
-		{ radius: 96,  scoreValue: 36, img: './assets/img/circle7.png'  },
-		{ radius: 128, scoreValue: 45, img: './assets/img/circle8.png'  },
-		{ radius: 160, scoreValue: 55, img: './assets/img/circle9.png'  },
-		{ radius: 192, scoreValue: 66, img: './assets/img/circle10.png' },
+		{ radius: 24,  scoreValue: 1,  img: './assets/img/1_blueberry.png',    imgSize: 780 },
+		{ radius: 32,  scoreValue: 3,  img: './assets/img/2_strawberry.png',   imgSize: 780 },
+		{ radius: 40,  scoreValue: 6,  img: './assets/img/3_passionfruit.png', imgSize: 780 },
+		{ radius: 56,  scoreValue: 10, img: './assets/img/4_lime.png',         imgSize: 780 },
+		{ radius: 64,  scoreValue: 15, img: './assets/img/5_peach.png',        imgSize: 780 },
+		{ radius: 72,  scoreValue: 21, img: './assets/img/6_kiwifruit.png',    imgSize: 780 },
+		{ radius: 84,  scoreValue: 28, img: './assets/img/7_orange.png',       imgSize: 780 },
+		{ radius: 96,  scoreValue: 36, img: './assets/img/8_grapefruit.png',   imgSize: 780 },
+		{ radius: 128, scoreValue: 45, img: './assets/img/9_dragonfruit.png',  imgSize: 780 },
+		{ radius: 160, scoreValue: 55, img: './assets/img/10_rockmelon.png',   imgSize: 780 },
+		{ radius: 192, scoreValue: 66, img: './assets/img/11_watermelon.png',  imgSize: 780 },
 	],
 	currentFruitSize: 0,
 	nextFruitSize: 0,
 	setNextFruitSize: function () {
 		Game.nextFruitSize = Math.floor(rand() * 5);
-		Game.elements.nextFruitImg.src = `./assets/img/circle${Game.nextFruitSize}.png`;
+		Game.elements.nextFruitImg.src = Game.fruitSizes[Game.nextFruitSize].img;
 	},
 
 	showHighscore: function () {
@@ -122,6 +124,11 @@ const Game = {
 	},
 
 	initGame: function () {
+		// Calculate sprite scales based on radius and image dimensions
+		Game.fruitSizes.forEach(fruit => {
+			fruit.scale = (fruit.radius * 2) / fruit.imgSize;
+		});
+
 		Render.run(render);
 		Runner.run(runner, engine);
 
@@ -259,7 +266,7 @@ const Game = {
 		const circle = Bodies.circle(x, y, size.radius, {
 			...friction,
 			...extraConfig,
-			render: { sprite: { texture: size.img, xScale: size.radius / 512, yScale: size.radius / 512 } },
+			render: { sprite: { texture: size.img, xScale: size.scale, yScale: size.scale } },
 		});
 		circle.sizeIndex = sizeIndex;
 		circle.popped = false;
@@ -304,11 +311,11 @@ const render = Render.create({
 		width: Game.width,
 		height: Game.height,
 		wireframes: false,
-		background: '#ffdcae'
+		background: './assets/img/background.png'
 	}
 });
 
-const menuStatics = [
+let menuStatics = [
 	Bodies.rectangle(Game.width / 2, Game.height * 0.4, 512, 512, {
 		isStatic: true,
 		render: { sprite: { texture: './assets/img/bg-menu.png' } },
@@ -324,9 +331,9 @@ const menuStatics = [
 			isStatic: true,
 			render: {
 				sprite: {
-					texture: `./assets/img/circle${index}.png`,
-					xScale: r / 1024,
-					yScale: r / 1024,
+					texture: Game.fruitSizes[index].img,
+					xScale: (r ) / Game.fruitSizes[index].imgSize,
+					yScale: (r ) / Game.fruitSizes[index].imgSize,
 				},
 			},
 		});
@@ -345,7 +352,7 @@ const wallProps = {
 	...friction,
 };
 
-const gameStatics = [
+let gameStatics = [
 	// Left
 	Bodies.rectangle(-(wallPad / 2), Game.height / 2, wallPad, Game.height, wallProps),
 
@@ -375,26 +382,106 @@ const resizeCanvas = () => {
 	const screenWidth = document.body.clientWidth;
 	const screenHeight = document.body.clientHeight;
 
-	let newWidth = Game.width;
-	let newHeight = Game.height;
-	let scaleUI = 1;
-
-	if (screenWidth * 1.5 > screenHeight) {
-		newHeight = Math.min(Game.height, screenHeight);
-		newWidth = newHeight / 1.5;
-		scaleUI = newHeight / Game.height;
+	// Calculate optimal game dimensions maintaining min 1.5:1 aspect ratio
+	let gameWidth, gameHeight;
+	
+	if (screenWidth / screenHeight < 1.5) {
+		// Screen is taller than 1.5:1, use screen width as base
+		gameWidth = screenWidth;
+		gameHeight = Math.max(screenWidth * 1.5, screenHeight);
 	} else {
-		newWidth = Math.min(Game.width, screenWidth);
-		newHeight = newWidth * 1.5;
-		scaleUI = newWidth / Game.width;
+		// Screen is wider than 1.5:1, use 1.5:1 ratio
+		gameHeight = screenHeight;
+		gameWidth = gameHeight / 1.5;
 	}
 
-	render.canvas.style.width = `${newWidth}px`;
-	render.canvas.style.height = `${newHeight}px`;
+	// Update game dimensions
+	Game.width = gameWidth;
+	Game.height = gameHeight;
 
-	Game.elements.ui.style.width = `${Game.width}px`;
-	Game.elements.ui.style.height = `${Game.height}px`;
-	Game.elements.ui.style.transform = `scale(${scaleUI})`;
+	// Update render dimensions
+	render.options.width = gameWidth;
+	render.options.height = gameHeight;
+	render.canvas.width = gameWidth;
+	render.canvas.height = gameHeight;
+
+	render.canvas.style.width = `${gameWidth}px`;
+	render.canvas.style.height = `${gameHeight}px`;
+
+	// Update UI overlay to match canvas exactly
+	Game.elements.ui.style.width = `${gameWidth}px`;
+	Game.elements.ui.style.height = `${gameHeight}px`;
+	Game.elements.ui.style.transform = 'none';
+
+	// Recreate physics world with new dimensions
+	recreatePhysicsWorld();
+};
+
+const recreatePhysicsWorld = () => {
+	// Clear existing static bodies
+	Composite.clear(engine.world, false);
+	
+	// Recreate walls with new dimensions
+	const wallProps = {
+		isStatic: true,
+		render: { fillStyle: '#FFEEDB' },
+		...friction,
+	};
+
+	const newGameStatics = [
+		// Left wall
+		Bodies.rectangle(-(wallPad / 2), Game.height / 2, wallPad, Game.height, wallProps),
+		// Right wall  
+		Bodies.rectangle(Game.width + (wallPad / 2), Game.height / 2, wallPad, Game.height, wallProps),
+		// Bottom wall
+		Bodies.rectangle(Game.width / 2, Game.height + (wallPad / 2) - statusBarHeight, Game.width, wallPad, wallProps),
+	];
+
+	// Recreate menu statics with new dimensions  
+	const newMenuStatics = [
+		Bodies.rectangle(Game.width / 2, Game.height * 0.4, 512, 512, {
+			isStatic: true,
+			render: { sprite: { texture: './assets/img/bg-menu.png' } },
+		}),
+
+		// Add each fruit in a circle
+		...Array.apply(null, Array(Game.fruitSizes.length)).map((_, index) => {
+			const x = (Game.width / 2) + 192 * Math.cos((Math.PI * 2 * index)/12);
+			const y = (Game.height * 0.4) + 192 * Math.sin((Math.PI * 2 * index)/12);
+			const r = 64;
+
+			return Bodies.circle(x, y, r, {
+				isStatic: true,
+				render: {
+					sprite: {
+						texture: Game.fruitSizes[index].img,
+						xScale: (r ) / Game.fruitSizes[index].imgSize,
+						yScale: (r ) / Game.fruitSizes[index].imgSize,
+					},
+				},
+			});
+		}),
+
+		Bodies.rectangle(Game.width / 2, Game.height * 0.75, 512, 96, {
+			isStatic: true,
+			label: 'btn-start',
+			render: { sprite: { texture: './assets/img/btn-start.png' } },
+		}),
+	];
+
+	// Store references to the new statics
+	gameStatics.length = 0;
+	gameStatics.push(...newGameStatics);
+	
+	menuStatics.length = 0;
+	menuStatics.push(...newMenuStatics);
+
+	// Add appropriate statics based on current game state
+	if (Game.stateIndex === GameStates.MENU) {
+		Composite.add(engine.world, menuStatics);
+	} else {
+		Composite.add(engine.world, gameStatics);
+	}
 };
 
 document.body.onload = resizeCanvas;
