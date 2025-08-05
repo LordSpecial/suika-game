@@ -5,6 +5,7 @@ export class Menu {
         this.scalingSystem = scalingSystem;
         this.menuImages = {};
         this.startButtonBounds = null;
+        this.settingsButtonBounds = null;
         this.loadImages();
     }
     
@@ -39,7 +40,6 @@ export class Menu {
         const { MENU, FRUITS } = GAME_CONFIG;
         const scale = this.scalingSystem.getScale();
         
-        console.log('Menu render called with:', gameWidth, gameHeight, 'scale:', scale); // Debug log
         
         // Clear canvas
         ctx.clearRect(0, 0, gameWidth, gameHeight);
@@ -99,14 +99,36 @@ export class Menu {
             height: buttonHeight
         };
         
-        console.log('Start button bounds set:', this.startButtonBounds); // Debug log
         
         if (this.menuImages.startButton.complete) {
             ctx.drawImage(this.menuImages.startButton, buttonX, buttonY, buttonWidth, buttonHeight);
-            console.log('Start button drawn'); // Debug log
-        } else {
-            console.log('Start button image not loaded yet'); // Debug log
         }
+        
+        // Draw settings button (smaller, positioned in corner)
+        const settingsButtonSize = 80 * scale;
+        const settingsX = gameWidth - settingsButtonSize - (20 * scale);
+        const settingsY = 20 * scale;
+        
+        // Store settings button bounds
+        this.settingsButtonBounds = {
+            x: settingsX,
+            y: settingsY,
+            width: settingsButtonSize,
+            height: settingsButtonSize
+        };
+        
+        // Draw settings button background
+        ctx.fillStyle = '#F5F5DC';
+        ctx.fillRect(settingsX, settingsY, settingsButtonSize, settingsButtonSize);
+        ctx.strokeStyle = '#8B4513';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(settingsX, settingsY, settingsButtonSize, settingsButtonSize);
+        
+        // Draw settings icon (gear shape)
+        ctx.fillStyle = '#2C1810';
+        ctx.font = `bold ${32 * scale}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.fillText('⚙', settingsX + settingsButtonSize/2, settingsY + settingsButtonSize/2 + 8 * scale);
     }
     
     /**
@@ -114,7 +136,6 @@ export class Menu {
      */
     isPointInStartButton(x, y) {
         if (!this.startButtonBounds) {
-            console.log('No start button bounds available'); // Debug log
             return false;
         }
         
@@ -124,25 +145,36 @@ export class Menu {
                         y >= bounds.y && 
                         y <= bounds.y + bounds.height;
         
-        console.log('Button bounds:', bounds); // Debug log
-        console.log('Click at:', x, y, 'isInside:', isInside); // Debug log
         
         return isInside;
+    }
+    
+    /**
+     * Check if a point is within the settings button
+     */
+    isPointInSettingsButton(x, y) {
+        if (!this.settingsButtonBounds) return false;
+        
+        const bounds = this.settingsButtonBounds;
+        return x >= bounds.x && 
+               x <= bounds.x + bounds.width && 
+               y >= bounds.y && 
+               y <= bounds.y + bounds.height;
     }
     
     /**
      * Handle click events on the menu
      */
     handleClick(x, y) {
-        console.log('Menu handleClick called with:', x, y); // Debug log
         
         if (this.isPointInStartButton(x, y)) {
-            console.log('Start button clicked!'); // Debug log
             return 'startGame';
         }
         
-        // For debugging - also check if click is anywhere on the menu area
-        console.log('Click not on start button'); // Debug log
+        if (this.isPointInSettingsButton(x, y)) {
+            return 'openSettings';
+        }
+        
         return null;
     }
     

@@ -1,13 +1,17 @@
 import { GAME_CONFIG, GAME_STATES } from '../utils/Config.js';
 import { ScalingSystem } from '../systems/ScalingSystem.js';
+import { Settings } from '../systems/Settings.js';
 import { Physics } from './Physics.js';
 import { Menu } from '../entities/Menu.js';
+import { SettingsMenu } from '../entities/SettingsMenu.js';
 
 export class Game {
     constructor() {
         this.scalingSystem = new ScalingSystem();
+        this.settings = new Settings();
         this.physics = new Physics();
         this.menu = new Menu(this.scalingSystem);
+        this.settingsMenu = new SettingsMenu(this.scalingSystem, this.settings);
         
         this.state = GAME_STATES.MENU;
         this.gameWidth = GAME_CONFIG.BASE_DIMENSIONS.width;
@@ -40,6 +44,9 @@ export class Game {
         this.dropTimeoutCounter = 0;
         this.gameUpdateLoop = null;
         
+        // Physics update flag
+        this.physicsNeedsUpdate = false;
+        
         this.initializeSounds();
         this.initializeFruits();
     }
@@ -65,6 +72,16 @@ export class Game {
         
         // Start physics
         this.physics.start();
+        
+        // Apply physics settings immediately after engine start, before creating any objects
+        const physicsConfig = this.settings.getCurrentPhysics();
+        
+        
+        // Apply physics settings now, before creating any game objects
+        this.applyPhysicsChanges(); // Safe to apply before any bodies exist
+        
+        // Apply initial theme settings now that engine is initialized
+        this.applyThemeChanges();
         
         // Start game update loop for frame-based timing
         this.startGameUpdateLoop();
@@ -153,15 +170,28 @@ export class Game {
         if (!canvas) return;
         
         const handleInteraction = (x, y) => {
-            if (this.state !== GAME_STATES.MENU) return;
-            
-            console.log('Menu interaction at:', x, y); // Debug log
-            
-            const action = this.menu.handleClick(x, y);
-            console.log('Menu action:', action); // Debug log
-            
-            if (action === 'startGame') {
-                this.startGame();
+            if (this.state === GAME_STATES.MENU) {
+                const action = this.menu.handleClick(x, y);
+                
+                if (action === 'startGame') {
+                    this.startGame();
+                } else if (action === 'openSettings') {
+                    this.openSettings();
+                }
+            } else if (this.state === GAME_STATES.SETTINGS) {
+                const action = this.settingsMenu.handleClick(x, y);
+                
+                if (action === 'back_to_menu') {
+                    this.closeSettings();
+                } else if (action === 'theme_changed') {
+                    this.applyThemeChanges();
+                } else if (action === 'physics_changed') {
+                    // Store that physics settings changed, don't apply during active gameplay
+                    console.log('📝 Physics settings changed - will apply on next game start');
+                    this.physicsNeedsUpdate = true;
+                } else if (action === 'refresh') {
+                    // Settings menu will re-render automatically
+                }
             }
         };
         
@@ -218,13 +248,23 @@ export class Game {
             return;
         }
         
-        // Render menu immediately first
-        this.menu.render(ctx, this.gameWidth, this.gameHeight);
-        console.log('Initial menu render completed'); // Debug log
+        // Render appropriate menu immediately first
+        if (this.state === GAME_STATES.MENU) {
+            this.menu.render(ctx, this.gameWidth, this.gameHeight);
+        } else if (this.state === GAME_STATES.SETTINGS) {
+            this.settingsMenu.render(ctx, this.gameWidth, this.gameHeight);
+        }
         
         const renderMenu = () => {
             if (this.state === GAME_STATES.MENU) {
                 this.menu.render(ctx, this.gameWidth, this.gameHeight);
+                requestAnimationFrame(renderMenu);
+            } else if (this.state === GAME_STATES.SETTINGS) {
+                this.settingsMenu.render(ctx, this.gameWidth, this.gameHeight);
+                requestAnimationFrame(renderMenu);
+            } else if (this.state === GAME_STATES.READY || this.state === GAME_STATES.DROP) {
+                // Render home button during gameplay
+                this.renderHomeButton(ctx);
                 requestAnimationFrame(renderMenu);
             }
         };
@@ -241,15 +281,12 @@ export class Game {
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
         
-        console.log('Screen dimensions:', screenWidth, 'x', screenHeight); // Debug log
         
         // Calculate new dimensions
         const dimensions = this.scalingSystem.calculateScale(screenWidth, screenHeight);
         this.gameWidth = dimensions.gameWidth;
         this.gameHeight = dimensions.gameHeight;
         
-        console.log('Game dimensions:', this.gameWidth, 'x', this.gameHeight); // Debug log
-        console.log('Aspect ratio:', (this.gameWidth / this.gameHeight).toFixed(2)); // Debug log
         
         // Update scaling
         this.scalingSystem.updateScaling(this.gameWidth, this.gameHeight);
@@ -319,6 +356,45 @@ export class Game {
     }
     
     /**
+     * Render home button during gameplay
+     */
+    renderHomeButton(ctx) {
+        const buttonSize = 32;
+        const margin = 16;
+        const x = this.gameWidth - buttonSize - margin;
+        const y = margin;
+        
+        // Button background
+        ctx.fillStyle = 'rgba(44, 24, 16, 0.8)';
+        ctx.beginPath();
+        ctx.roundRect(x, y, buttonSize, buttonSize, 8);
+        ctx.fill();
+        
+        // Home icon (simple house shape)
+        ctx.fillStyle = '#F4E4BC';
+        ctx.strokeStyle = '#F4E4BC';
+        ctx.lineWidth = 2;
+        
+        const iconSize = 16;
+        const iconX = x + (buttonSize - iconSize) / 2;
+        const iconY = y + (buttonSize - iconSize) / 2;
+        
+        // House roof
+        ctx.beginPath();
+        ctx.moveTo(iconX + iconSize / 2, iconY);
+        ctx.lineTo(iconX, iconY + iconSize / 3);
+        ctx.lineTo(iconX + iconSize, iconY + iconSize / 3);
+        ctx.closePath();
+        ctx.fill();
+        
+        // House body
+        ctx.fillRect(iconX + 2, iconY + iconSize / 3, iconSize - 4, iconSize * 2 / 3);
+        
+        // Store button bounds for click detection
+        this.homeButtonBounds = { x, y, width: buttonSize, height: buttonSize };
+    }
+    
+    /**
      * Recreate walls with current dimensions
      */
     recreateWalls() {
@@ -331,12 +407,258 @@ export class Game {
     }
     
     /**
+     * Open settings menu
+     */
+    openSettings() {
+        this.sounds.click.play();
+        this.state = GAME_STATES.SETTINGS;
+        this.settingsMenu.resetView();
+        this.startMenuRendering();
+    }
+    
+    /**
+     * Return to main menu from game
+     */
+    goToMenu() {
+        // Clear game state
+        this.state = GAME_STATES.MENU;
+        
+        // Clear physics world
+        this.physics.clearWorld();
+        
+        // Recreate walls for menu
+        const walls = this.physics.createWalls(this.gameWidth, this.gameHeight);
+        this.physics.addBodies(walls);
+        
+        // Reset game elements
+        this.elements.fruits = [];
+        this.elements.previewBall = null;
+        this.score = 0;
+        this.homeButtonBounds = null;
+        
+        // Setup menu interaction
+        this.setupMenuInteraction();
+        
+        // Render menu
+        this.startMenuRendering();
+    }
+    
+    /**
+     * Close settings menu and return to main menu
+     */
+    closeSettings() {
+        this.sounds.click.play();
+        this.state = GAME_STATES.MENU;
+        this.startMenuRendering();
+    }
+    
+    /**
+     * Apply theme changes from settings
+     */
+    applyThemeChanges() {
+        const theme = this.settings.getCurrentTheme();
+        
+        // Update fruit images based on selected theme
+        this.updateFruitTheme(theme.balls);
+        
+        // Update background images
+        this.updateBackgroundTheme(theme.background);
+        
+        // Update sound theme
+        this.updateSoundsTheme(theme.sounds);
+        
+        // Re-initialize scaled fruits with new theme
+        this.initializeFruits();
+        
+        // Update existing fruits in the game with new theme
+        this.updateExistingFruits();
+        
+        // Update menu to show new theme
+        if (this.menu) {
+            this.menu.loadImages();
+        }
+    }
+    
+    /**
+     * Update existing fruits in the game with new theme
+     */
+    updateExistingFruits() {
+        if (!this.physics || !this.physics.engine) return;
+        
+        // Get all bodies from the physics engine
+        const bodies = this.physics.engine.world.bodies;
+        
+        // Update fruit bodies with new theme images
+        bodies.forEach(body => {
+            // Check if this is a fruit body (has sizeIndex and is not static)
+            if (body.sizeIndex !== undefined && !body.isStatic && body.render && body.render.sprite) {
+                const newFruitConfig = this.scaledFruits[body.sizeIndex];
+                if (newFruitConfig) {
+                    body.render.sprite.texture = newFruitConfig.img;
+                }
+            }
+        });
+        
+        // Update preview ball if it exists
+        if (this.elements.previewBall && this.elements.previewBall.sizeIndex !== undefined) {
+            const newFruitConfig = this.scaledFruits[this.elements.previewBall.sizeIndex];
+            if (newFruitConfig && this.elements.previewBall.render && this.elements.previewBall.render.sprite) {
+                this.elements.previewBall.render.sprite.texture = newFruitConfig.img;
+            }
+        }
+    }
+    
+    /**
+     * Apply physics changes from settings
+     */
+    applyPhysicsChanges() {
+        try {
+            console.log('🎯 Current game state when applying physics:', this.state);
+            
+            const physicsConfig = this.settings.getCurrentPhysics();
+            console.log('🔄 Applying physics changes with config:', physicsConfig);
+            
+            if (!physicsConfig) {
+                console.error('No physics config returned');
+                return;
+            }
+            
+            // Update physics engine with new settings (engine-level only)
+            if (this.physics && this.physics.engine && this.physics.engine.world) {
+                // Update gravity
+                if (physicsConfig.gravity && typeof physicsConfig.gravity.scale === 'number') {
+                    const oldGravity = this.physics.engine.world.gravity.scale;
+                    console.log(`🌍 Changing gravity scale from ${oldGravity} to: ${physicsConfig.gravity.scale}`);
+                    
+                    // Check if we're in a game state with active bodies
+                    const bodies = this.physics.engine.world.bodies;
+                    const nonStaticBodies = bodies.filter(body => !body.isStatic);
+                    console.log(`🔍 Found ${nonStaticBodies.length} non-static bodies when changing gravity`);
+                    
+                    // If we're changing gravity while non-static bodies exist, this could cause issues
+                    if (nonStaticBodies.length > 0 && this.state !== GAME_STATES.MENU && this.state !== GAME_STATES.SETTINGS) {
+                        console.warn('⚠️ Changing gravity while game objects exist - this may cause physics issues');
+                        
+                        // Log the current positions of non-static bodies
+                        nonStaticBodies.forEach((body, index) => {
+                            console.log(`Body ${index}: pos(${body.position.x.toFixed(1)}, ${body.position.y.toFixed(1)}) vel(${body.velocity.x.toFixed(2)}, ${body.velocity.y.toFixed(2)})`);
+                        });
+                    }
+                    
+                    const currentGravity = this.physics.engine.world.gravity.scale;
+                    this.physics.engine.world.gravity.scale = physicsConfig.gravity.scale;
+                    
+                    // Verify the change took effect
+                    const newGravity = this.physics.engine.world.gravity.scale;
+                    console.log(`🌍 Gravity changed from ${currentGravity} to ${newGravity} (target: ${physicsConfig.gravity.scale})`);
+                }
+                
+                // Store current physics config for new body creation
+                // New bodies will inherit these properties through getCurrentPhysicsOverrides()
+                console.log('📝 Physics settings stored for new body creation');
+                console.log('🏁 Game state after physics update:', this.state);
+            }
+        } catch (error) {
+            console.error('❌ Error applying physics changes:', error);
+            console.error('Stack trace:', error.stack);
+        }
+    }
+    
+    /**
+     * Update fruit theme
+     */
+    updateFruitTheme(ballTheme) {
+        if (!ballTheme || !ballTheme.items) {
+            console.error('Invalid ballTheme structure:', ballTheme);
+            return;
+        }
+        
+        // Replace the FRUITS config with the selected theme
+        GAME_CONFIG.FRUITS = ballTheme.items;
+    }
+    
+    /**
+     * Update background theme
+     */
+    updateBackgroundTheme(backgroundTheme) {
+        // Update background assets
+        GAME_CONFIG.ASSETS.images.background = backgroundTheme.background;
+        GAME_CONFIG.ASSETS.images.menuBackground = backgroundTheme.menuBackground;
+        
+        // Update physics render background
+        if (this.physics.render) {
+            this.physics.render.options.background = backgroundTheme.background;
+        }
+    }
+    
+    /**
+     * Update sounds theme
+     */
+    updateSoundsTheme(soundTheme) {
+        // Update sound assets
+        GAME_CONFIG.ASSETS.sounds.click = soundTheme.click;
+        GAME_CONFIG.ASSETS.sounds.pop = soundTheme.pop;
+        
+        // Reinitialize sounds with new theme
+        this.initializeSounds();
+    }
+    
+    /**
+     * Get current physics settings for fruit creation
+     */
+    getCurrentPhysicsOverrides() {
+        const physicsConfig = this.settings.getCurrentPhysics();
+        return {
+            friction: physicsConfig.friction.friction,
+            frictionStatic: physicsConfig.friction.frictionStatic,
+            restitution: physicsConfig.bounciness.restitution
+        };
+    }
+    
+    /**
+     * Log fruit velocity for debugging physics issues
+     */
+    logFruitVelocity(fruit) {
+        let logCount = 0;
+        const maxLogs = 120; // Log for about 2 seconds at 60fps
+        
+        const logVelocity = () => {
+            if (logCount >= maxLogs || !fruit.position) {
+                return; // Stop logging
+            }
+            
+            
+            logCount++;
+            requestAnimationFrame(logVelocity);
+        };
+        
+        // Start logging on next frame
+        requestAnimationFrame(logVelocity);
+    }
+    
+    /**
+     * Remove menu event listeners to prevent conflicts with game controls
+     */
+    removeMenuEventListeners() {
+        if (this.menuEventHandlers) {
+            const canvas = this.physics.render.canvas;
+            Object.entries(this.menuEventHandlers).forEach(([event, handler]) => {
+                canvas.removeEventListener(event, handler);
+            });
+            this.menuEventHandlers = null;
+        }
+    }
+    
+    /**
      * Start the game
      */
     startGame() {
         this.sounds.click.play();
         
         this.state = GAME_STATES.READY;
+        
+        // Remove menu event listeners to prevent conflicts
+        this.removeMenuEventListeners();
         
         // Create game walls
         this.recreateWalls();
@@ -349,6 +671,12 @@ export class Game {
         
         // Create preview ball
         this.createPreviewBall();
+        
+        // Apply any pending physics changes now that we're in game state
+        if (this.physicsNeedsUpdate) {
+            this.applyPhysicsChanges();
+            this.physicsNeedsUpdate = false;
+        }
         
         // Setup game interaction
         this.setupGameInteraction();
@@ -366,7 +694,8 @@ export class Game {
             this.gameWidth / 2,
             scaledHeight,
             this.scaledFruits[0],
-            { isStatic: true }
+            { isStatic: true },
+            this.getCurrentPhysicsOverrides()
         );
         this.physics.addBodies(this.elements.previewBall);
     }
@@ -389,14 +718,26 @@ export class Game {
             this.elements.previewBall.position.x = x;
         };
         
-        // Mouse/touch release for dropping fruit
+        // Mouse/touch release for dropping fruit or home button
         const handleMouseUp = (event) => {
-            if (this.state !== GAME_STATES.READY) return;
-            
             const rect = this.physics.render.canvas.getBoundingClientRect();
             const scaleX = this.physics.render.canvas.width / rect.width;
+            const scaleY = this.physics.render.canvas.height / rect.height;
             const x = (event.clientX - rect.left) * scaleX;
+            const y = (event.clientY - rect.top) * scaleY;
             
+            // Check home button click
+            if (this.homeButtonBounds && 
+                x >= this.homeButtonBounds.x && 
+                x <= this.homeButtonBounds.x + this.homeButtonBounds.width &&
+                y >= this.homeButtonBounds.y && 
+                y <= this.homeButtonBounds.y + this.homeButtonBounds.height) {
+                this.goToMenu();
+                return;
+            }
+            
+            // Drop fruit if in ready state
+            if (this.state !== GAME_STATES.READY) return;
             this.addFruit(x);
         };
         
@@ -417,14 +758,27 @@ export class Game {
         
         const handleTouchEnd = (event) => {
             event.preventDefault();
-            if (this.state !== GAME_STATES.READY) return;
             if (event.changedTouches.length === 0) return;
             
             const touch = event.changedTouches[0];
             const rect = this.physics.render.canvas.getBoundingClientRect();
             const scaleX = this.physics.render.canvas.width / rect.width;
+            const scaleY = this.physics.render.canvas.height / rect.height;
             const x = (touch.clientX - rect.left) * scaleX;
+            const y = (touch.clientY - rect.top) * scaleY;
             
+            // Check home button click
+            if (this.homeButtonBounds && 
+                x >= this.homeButtonBounds.x && 
+                x <= this.homeButtonBounds.x + this.homeButtonBounds.width &&
+                y >= this.homeButtonBounds.y && 
+                y <= this.homeButtonBounds.y + this.homeButtonBounds.height) {
+                this.goToMenu();
+                return;
+            }
+            
+            // Drop fruit if in ready state
+            if (this.state !== GAME_STATES.READY) return;
             this.addFruit(x);
         };
         
@@ -461,8 +815,11 @@ export class Game {
             sizeIndex: this.gameData.currentFruitSize
         };
         
-        const latestFruit = this.physics.createFruit(x, scaledHeight, fruitData);
+        const latestFruit = this.physics.createFruit(x, scaledHeight, fruitData, {}, this.getCurrentPhysicsOverrides());
         this.physics.addBodies(latestFruit);
+        
+        // Log velocity for debugging
+        this.logFruitVelocity(latestFruit);
         
         this.gameData.currentFruitSize = this.gameData.nextFruitSize;
         this.setNextFruitSize();
@@ -483,7 +840,8 @@ export class Game {
             { 
                 isStatic: true,
                 collisionFilter: { mask: 0x0040 }
-            }
+            },
+            this.getCurrentPhysicsOverrides()
         );
         
         // Set frame-based timeout counter
@@ -549,7 +907,7 @@ export class Game {
                     sizeIndex: newSize
                 };
                 
-                const newFruit = this.physics.createFruit(midPosX, midPosY, newFruitData);
+                const newFruit = this.physics.createFruit(midPosX, midPosY, newFruitData, {}, this.getCurrentPhysicsOverrides());
                 this.physics.addBodies(newFruit);
                 
                 // Add pop effect

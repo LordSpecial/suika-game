@@ -18,6 +18,7 @@ export class Physics {
         // Create Matter.js engine
         this.engine = Matter.Engine.create();
         
+        
         // Create runner with fixed timestep configuration
         this.runner = Matter.Runner.create();
         const timestepConfig = GAME_CONFIG.PHYSICS.timestep;
@@ -28,12 +29,6 @@ export class Physics {
         this.runner.deltaMax = timestepConfig.deltaMax;
         this.runner.isFixed = timestepConfig.isFixed;
         
-        console.log('Physics - Timestep configured:', {
-            delta: this.runner.delta,
-            deltaMin: this.runner.deltaMin, 
-            deltaMax: this.runner.deltaMax,
-            isFixed: this.runner.isFixed
-        }); // Debug log
         
         // Create renderer
         this.render = Matter.Render.create({
@@ -124,16 +119,25 @@ export class Physics {
     }
     
     /**
+     * Update gravity scale
+     */
+    updateGravity(gravityScale) {
+        if (this.engine) {
+            this.engine.world.gravity.scale = gravityScale;
+        }
+    }
+    
+    /**
      * Create a fruit physics body
      */
-    createFruit(x, y, fruitData, extraConfig = {}) {
+    createFruit(x, y, fruitData, extraConfig = {}, physicsOverrides = {}) {
         const { PHYSICS } = GAME_CONFIG;
         
         const circle = Matter.Bodies.circle(x, y, fruitData.radius, {
-            friction: PHYSICS.friction,
-            frictionStatic: PHYSICS.frictionStatic,
+            friction: physicsOverrides.friction || PHYSICS.friction,
+            frictionStatic: physicsOverrides.frictionStatic || PHYSICS.frictionStatic,
             frictionAir: PHYSICS.frictionAir,
-            restitution: PHYSICS.restitution,
+            restitution: physicsOverrides.restitution || PHYSICS.restitution,
             ...extraConfig,
             render: { 
                 sprite: { 

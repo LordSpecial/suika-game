@@ -64,17 +64,17 @@ export const GAME_CONFIG = {
     },
     
     FRUITS: [
-        { radius: 24,  scoreValue: 1,  img: './assets/img/1_blueberry.png',    imgSize: 780 },
-        { radius: 32,  scoreValue: 3,  img: './assets/img/2_strawberry.png',   imgSize: 780 },
-        { radius: 40,  scoreValue: 6,  img: './assets/img/3_passionfruit.png', imgSize: 780 },
-        { radius: 56,  scoreValue: 10, img: './assets/img/4_lime.png',         imgSize: 780 },
-        { radius: 64,  scoreValue: 15, img: './assets/img/5_peach.png',        imgSize: 780 },
-        { radius: 72,  scoreValue: 21, img: './assets/img/6_kiwifruit.png',    imgSize: 780 },
-        { radius: 84,  scoreValue: 28, img: './assets/img/7_orange.png',       imgSize: 780 },
-        { radius: 96,  scoreValue: 36, img: './assets/img/8_grapefruit.png',   imgSize: 780 },
-        { radius: 128, scoreValue: 45, img: './assets/img/9_dragonfruit.png',  imgSize: 780 },
-        { radius: 160, scoreValue: 55, img: './assets/img/10_rockmelon.png',   imgSize: 780 },
-        { radius: 192, scoreValue: 66, img: './assets/img/11_watermelon.png',  imgSize: 780 }
+        { radius: 30,  scoreValue: 1,  img: './assets/img/realFruits/1_blueberry.png',    imgSize: 780 },
+        { radius: 40,  scoreValue: 3,  img: './assets/img/realFruits/2_strawberry.png',   imgSize: 780 },
+        { radius: 50,  scoreValue: 6,  img: './assets/img/realFruits/3_passionfruit.png', imgSize: 780 },
+        { radius: 70,  scoreValue: 10, img: './assets/img/realFruits/4_lime.png',         imgSize: 780 },
+        { radius: 80,  scoreValue: 15, img: './assets/img/realFruits/5_peach.png',        imgSize: 780 },
+        { radius: 90,  scoreValue: 21, img: './assets/img/realFruits/6_kiwifruit.png',    imgSize: 780 },
+        { radius: 105, scoreValue: 28, img: './assets/img/realFruits/7_orange.png',       imgSize: 780 },
+        { radius: 120, scoreValue: 36, img: './assets/img/realFruits/8_grapefruit.png',   imgSize: 780 },
+        { radius: 160, scoreValue: 45, img: './assets/img/realFruits/9_dragonfruit.png',  imgSize: 780 },
+        { radius: 200, scoreValue: 55, img: './assets/img/realFruits/10_rockmelon.png',   imgSize: 780 },
+        { radius: 240, scoreValue: 66, img: './assets/img/realFruits/11_watermelon.png',  imgSize: 780 }
     ],
     
     ASSETS: {
@@ -88,12 +88,82 @@ export const GAME_CONFIG = {
             startButton: './assets/img/btn-start.png',
             popEffect: './assets/img/pop.png'
         }
+    },
+    
+    THEMES: {
+        BALLS: {
+            realFruits: {
+                name: 'Real Fruits',
+                items: [
+                    { radius: 24,  scoreValue: 1,  img: './assets/img/realFruits/1_blueberry.png',    imgSize: 780 },
+                    { radius: 32,  scoreValue: 3,  img: './assets/img/realFruits/2_strawberry.png',   imgSize: 780 },
+                    { radius: 40,  scoreValue: 6,  img: './assets/img/realFruits/3_passionfruit.png', imgSize: 780 },
+                    { radius: 56,  scoreValue: 10, img: './assets/img/realFruits/4_lime.png',         imgSize: 780 },
+                    { radius: 64,  scoreValue: 15, img: './assets/img/realFruits/5_peach.png',        imgSize: 780 },
+                    { radius: 72,  scoreValue: 21, img: './assets/img/realFruits/6_kiwifruit.png',    imgSize: 780 },
+                    { radius: 84,  scoreValue: 28, img: './assets/img/realFruits/7_orange.png',       imgSize: 780 },
+                    { radius: 96,  scoreValue: 36, img: './assets/img/realFruits/8_grapefruit.png',   imgSize: 780 },
+                    { radius: 128, scoreValue: 45, img: './assets/img/realFruits/9_dragonfruit.png',  imgSize: 780 },
+                    { radius: 160, scoreValue: 55, img: './assets/img/realFruits/10_rockmelon.png',   imgSize: 780 },
+                    { radius: 192, scoreValue: 66, img: './assets/img/realFruits/11_watermelon.png',  imgSize: 780 }
+                ]
+            },
+            cartoonFruits: {
+                name: 'Cartoon Fruits',
+                items: [
+                    { radius: 24,  scoreValue: 1,  img: './assets/img/cartoonFruits/circle0.png',  imgSize: 1024 },
+                    { radius: 32,  scoreValue: 3,  img: './assets/img/cartoonFruits/circle1.png',  imgSize: 1024 },
+                    { radius: 40,  scoreValue: 6,  img: './assets/img/cartoonFruits/circle2.png',  imgSize: 1024 },
+                    { radius: 56,  scoreValue: 10, img: './assets/img/cartoonFruits/circle3.png',  imgSize: 1024 },
+                    { radius: 64,  scoreValue: 15, img: './assets/img/cartoonFruits/circle4.png',  imgSize: 1024 },
+                    { radius: 72,  scoreValue: 21, img: './assets/img/cartoonFruits/circle5.png',  imgSize: 1024 },
+                    { radius: 84,  scoreValue: 28, img: './assets/img/cartoonFruits/circle6.png',  imgSize: 1024 },
+                    { radius: 96,  scoreValue: 36, img: './assets/img/cartoonFruits/circle7.png',  imgSize: 1024 },
+                    { radius: 128, scoreValue: 45, img: './assets/img/cartoonFruits/circle8.png',  imgSize: 1024 },
+                    { radius: 160, scoreValue: 55, img: './assets/img/cartoonFruits/circle9.png',  imgSize: 1024 },
+                    { radius: 192, scoreValue: 66, img: './assets/img/cartoonFruits/circle10.png', imgSize: 1024 }
+                ]
+            }
+        },
+        BACKGROUNDS: {
+            default: {
+                name: 'Default',
+                background: './assets/img/background.png',
+                menuBackground: './assets/img/bg-menu.png'
+            }
+        },
+        SOUNDS: {
+            default: {
+                name: 'Default',
+                click: './assets/click.mp3',
+                pop: Array.from({length: 11}, (_, i) => `./assets/pop${i}.mp3`)
+            }
+        }
+    },
+    
+    PHYSICS_PRESETS: {
+        BOUNCINESS: [
+            { restitution: 0.05, name: 'Low' },     // Very low bounce - fruits settle quickly
+            { restitution: 0.2, name: 'Medium' },   // Default/Medium bounce (unchanged)
+            { restitution: 0.6, name: 'High' }      // Very bouncy - fruits bounce a lot
+        ],
+        GRAVITY: [
+            { scale: 0.0003, name: 'Low' },    // Light gravity - floaty
+            { scale: 0.001, name: 'Medium' },  // Normal gravity (Matter.js default)
+            { scale: 0.003, name: 'High' }     // Heavy gravity - noticeably faster
+        ],
+        FRICTION: [
+            { friction: 0.1, frictionStatic: 0.1, name: 'Low' },     // Very slippery - fruits slide a lot
+            { friction: 0.8, frictionStatic: 0.8, name: 'Medium' },  // Default/Medium (unchanged)
+            { friction: 1.5, frictionStatic: 1.5, name: 'High' }     // Very grippy - fruits stick strongly
+        ]
     }
 };
 
 export const GAME_STATES = {
     MENU: 0,
-    READY: 1,
-    DROP: 2,
-    LOSE: 3
+    SETTINGS: 1,
+    READY: 2,
+    DROP: 3,
+    LOSE: 4
 };
