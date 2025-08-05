@@ -1,0 +1,221 @@
+import { GAME_CONFIG } from '../utils/Config.js';
+
+export class Physics {
+    constructor() {
+        this.engine = null;
+        this.render = null;
+        this.runner = null;
+        this.gameStatics = [];
+        this.scalingSystem = null;
+    }
+    
+    /**
+     * Initialize the physics engine
+     */
+    init(canvasElement, gameWidth, gameHeight, scalingSystem) {
+        this.scalingSystem = scalingSystem;
+        
+        // Create Matter.js engine
+        this.engine = Matter.Engine.create();
+        
+        // Create runner with fixed timestep configuration
+        this.runner = Matter.Runner.create();
+        const timestepConfig = GAME_CONFIG.PHYSICS.timestep;
+        
+        // Configure runner for framerate independence
+        this.runner.delta = timestepConfig.delta;
+        this.runner.deltaMin = timestepConfig.deltaMin;
+        this.runner.deltaMax = timestepConfig.deltaMax;
+        this.runner.isFixed = timestepConfig.isFixed;
+        
+        console.log('Physics - Timestep configured:', {
+            delta: this.runner.delta,
+            deltaMin: this.runner.deltaMin, 
+            deltaMax: this.runner.deltaMax,
+            isFixed: this.runner.isFixed
+        }); // Debug log
+        
+        // Create renderer
+        this.render = Matter.Render.create({
+            element: canvasElement,
+            engine: this.engine,
+            options: {
+                width: gameWidth,
+                height: gameHeight,
+                wireframes: false,
+                background: GAME_CONFIG.ASSETS.images.background
+            }
+        });
+        
+        return {
+            engine: this.engine,
+            render: this.render,
+            runner: this.runner
+        };
+    }
+    
+    /**
+     * Start the physics engine
+     */
+    start() {
+        if (this.render && this.runner && this.engine) {
+            Matter.Render.run(this.render);
+            Matter.Runner.run(this.runner, this.engine);
+        }
+    }
+    
+    /**
+     * Update physics world dimensions
+     */
+    updateDimensions(gameWidth, gameHeight) {
+        if (this.render) {
+            this.render.options.width = gameWidth;
+            this.render.options.height = gameHeight;
+            this.render.canvas.width = gameWidth;
+            this.render.canvas.height = gameHeight;
+        }
+    }
+    
+    /**
+     * Create game walls
+     */
+    createWalls(gameWidth, gameHeight) {
+        const { PHYSICS } = GAME_CONFIG;
+        const scaledWallPad = this.scalingSystem.getScaledConstant('wallPad');
+        const scaledStatusBarHeight = this.scalingSystem.getScaledConstant('statusBarHeight');
+        
+        const wallProps = {
+            isStatic: true,
+            render: { fillStyle: '#FFEEDB' },
+            friction: PHYSICS.friction,
+            frictionStatic: PHYSICS.frictionStatic,
+            frictionAir: PHYSICS.frictionAir,
+            restitution: PHYSICS.restitution
+        };
+        
+        const walls = [
+            // Left wall
+            Matter.Bodies.rectangle(
+                -(scaledWallPad / 2), 
+                gameHeight / 2, 
+                scaledWallPad, 
+                gameHeight, 
+                wallProps
+            ),
+            // Right wall  
+            Matter.Bodies.rectangle(
+                gameWidth + (scaledWallPad / 2), 
+                gameHeight / 2, 
+                scaledWallPad, 
+                gameHeight, 
+                wallProps
+            ),
+            // Bottom wall
+            Matter.Bodies.rectangle(
+                gameWidth / 2, 
+                gameHeight + (scaledWallPad / 2) - scaledStatusBarHeight, 
+                gameWidth, 
+                scaledWallPad, 
+                wallProps
+            )
+        ];
+        
+        return walls;
+    }
+    
+    /**
+     * Create a fruit physics body
+     */
+    createFruit(x, y, fruitData, extraConfig = {}) {
+        const { PHYSICS } = GAME_CONFIG;
+        
+        const circle = Matter.Bodies.circle(x, y, fruitData.radius, {
+            friction: PHYSICS.friction,
+            frictionStatic: PHYSICS.frictionStatic,
+            frictionAir: PHYSICS.frictionAir,
+            restitution: PHYSICS.restitution,
+            ...extraConfig,
+            render: { 
+                sprite: { 
+                    texture: fruitData.img, 
+                    xScale: fruitData.scale, 
+                    yScale: fruitData.scale 
+                } 
+            }
+        });
+        
+        // Add custom properties
+        circle.sizeIndex = fruitData.sizeIndex || 0;
+        circle.popped = false;
+        
+        return circle;
+    }
+    
+    /**
+     * Create pop effect
+     */
+    createPopEffect(x, y, radius) {
+        const circle = Matter.Bodies.circle(x, y, radius, {
+            isStatic: true,
+            collisionFilter: { mask: 0x0040 },
+            angle: Math.random() * (Math.PI * 2),
+            render: {
+                sprite: {
+                    texture: GAME_CONFIG.ASSETS.images.popEffect,
+                    xScale: radius / 384,
+                    yScale: radius / 384,
+                }
+            },
+        });
+        
+        return circle;
+    }
+    
+    /**
+     * Add bodies to the world
+     */
+    addBodies(bodies) {
+        if (this.engine) {
+            Matter.Composite.add(this.engine.world, Array.isArray(bodies) ? bodies : [bodies]);
+        }
+    }
+    
+    /**
+     * Remove bodies from the world
+     */
+    removeBodies(bodies) {
+        if (this.engine) {
+            Matter.Composite.remove(this.engine.world, Array.isArray(bodies) ? bodies : [bodies]);
+        }
+    }
+    
+    /**
+     * Clear all bodies from the world
+     */
+    clearWorld() {
+        if (this.engine) {
+            Matter.Composite.clear(this.engine.world, false);
+        }
+    }
+    
+    /**
+     * Setup mouse/touch controls
+     */
+    setupMouseControl() {
+        if (!this.render || !this.engine) return null;
+        
+        const mouse = Matter.Mouse.create(this.render.canvas);
+        const mouseConstraint = Matter.MouseConstraint.create(this.engine, {
+            mouse: mouse,
+            constraint: {
+                stiffness: 0.2,
+                render: {
+                    visible: false,
+                },
+            },
+        });
+        
+        this.render.mouse = mouse;
+        return { mouse, mouseConstraint };
+    }
+}
