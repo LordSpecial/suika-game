@@ -261,17 +261,10 @@ export class Game {
             // Check if any part of the fruit is above the lose line
             const fruitTop = body.position.y - body.circleRadius;
             
-            // Condition 1: Any part above the line with upward velocity
-            if (fruitTop < scaledLoseHeight && body.velocity.y < 0) {
-                console.log(`🎯 Game over: Fruit above line with upward velocity (${body.velocity.y.toFixed(2)})`);
-                this.loseGame();
-                return;
-            }
-            
-            // Condition 2: 80% of fruit above the line with any velocity
+            // Game over: 80% of fruit above the line with upward velocity
             const twentyPercentFromTop = fruitTop + (body.circleRadius * 2 * 0.2);
-            if (twentyPercentFromTop < scaledLoseHeight) {
-                console.log(`🎯 Game over: 80% of fruit above line with velocity (${body.velocity.y.toFixed(2)})`);
+            if (twentyPercentFromTop < scaledLoseHeight && body.velocity.y < 0) {
+                console.log(`🎯 Game over: 80% of fruit above line with upward velocity (${body.velocity.y.toFixed(2)})`);
                 this.loseGame();
                 return;
             }
@@ -1223,6 +1216,10 @@ export class Game {
         
         // Reset frame counter
         this.dropTimeoutCounter = 0;
+        
+        // Restart menu rendering and interaction
+        this.startMenuRendering();
+        this.setupMenuInteraction();
         
         // Remove game event listeners
         if (this.gameEventHandlers) {
