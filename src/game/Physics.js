@@ -38,9 +38,36 @@ export class Physics {
                 width: gameWidth,
                 height: gameHeight,
                 wireframes: false,
-                background: GAME_CONFIG.ASSETS.images.background
+                background: GAME_CONFIG.ASSETS.images.background,
+                // Enable high-quality rendering
+                pixelRatio: window.devicePixelRatio || 1,
+                // Ensure smooth scaling
+                showVelocity: false,
+                showAngleIndicator: false,
+                showIds: false
             }
         });
+        
+        // Configure canvas for maximum anti-aliasing
+        const canvas = this.render.canvas;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            // Enable maximum image smoothing/anti-aliasing
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            
+            // Set additional anti-aliasing properties
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+        }
+        
+        // Set CSS for crisp rendering
+        canvas.style.imageRendering = 'auto';
+        canvas.style.imageRendering = '-webkit-optimize-contrast';
+        canvas.style.imageRendering = 'crisp-edges';
+        canvas.style.imageRendering = 'pixelated';
+        // Override the pixelated setting for smooth rendering
+        canvas.style.imageRendering = 'auto';
         
         return {
             engine: this.engine,

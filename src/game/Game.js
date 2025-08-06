@@ -225,8 +225,9 @@ export class Game {
         
         const getCanvasCoordinates = (event) => {
             const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
+            // Use logical canvas dimensions (not scaled by devicePixelRatio)
+            const scaleX = this.gameWidth / rect.width;
+            const scaleY = this.gameHeight / rect.height;
             
             return {
                 x: (event.clientX - rect.left) * scaleX,
@@ -325,10 +326,30 @@ export class Game {
             this.physics.updateDimensions(this.gameWidth, this.gameHeight);
         }
         
-        // Update canvas styling
+        // Update canvas styling with high-DPI support
         if (this.physics.render) {
-            this.physics.render.canvas.style.width = `${this.gameWidth}px`;
-            this.physics.render.canvas.style.height = `${this.gameHeight}px`;
+            const canvas = this.physics.render.canvas;
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            
+            // Set actual canvas size accounting for device pixel ratio
+            canvas.width = this.gameWidth * dpr;
+            canvas.height = this.gameHeight * dpr;
+            
+            // Scale CSS size to maintain visual size
+            canvas.style.width = `${this.gameWidth}px`;
+            canvas.style.height = `${this.gameHeight}px`;
+            
+            // Scale context to ensure correct drawing operations
+            if (ctx) {
+                ctx.scale(dpr, dpr);
+                // Re-enable anti-aliasing after scaling
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+            }
+            
+            // Ensure crisp rendering
+            canvas.style.imageRendering = 'auto';
         }
         
         // Center the game container
@@ -740,7 +761,7 @@ export class Game {
             if (!this.elements.previewBall) return;
             
             const rect = this.physics.render.canvas.getBoundingClientRect();
-            const scaleX = this.physics.render.canvas.width / rect.width;
+            const scaleX = this.gameWidth / rect.width;
             const x = (event.clientX - rect.left) * scaleX;
             
             this.elements.previewBall.position.x = x;
@@ -749,8 +770,9 @@ export class Game {
         // Mouse/touch release for dropping fruit or home button
         const handleMouseUp = (event) => {
             const rect = this.physics.render.canvas.getBoundingClientRect();
-            const scaleX = this.physics.render.canvas.width / rect.width;
-            const scaleY = this.physics.render.canvas.height / rect.height;
+            // Use logical canvas dimensions (not scaled by devicePixelRatio)
+            const scaleX = this.gameWidth / rect.width;
+            const scaleY = this.gameHeight / rect.height;
             const x = (event.clientX - rect.left) * scaleX;
             const y = (event.clientY - rect.top) * scaleY;
             
@@ -778,7 +800,7 @@ export class Game {
             
             const touch = event.touches[0];
             const rect = this.physics.render.canvas.getBoundingClientRect();
-            const scaleX = this.physics.render.canvas.width / rect.width;
+            const scaleX = this.gameWidth / rect.width;
             const x = (touch.clientX - rect.left) * scaleX;
             
             this.elements.previewBall.position.x = x;
@@ -790,8 +812,8 @@ export class Game {
             
             const touch = event.changedTouches[0];
             const rect = this.physics.render.canvas.getBoundingClientRect();
-            const scaleX = this.physics.render.canvas.width / rect.width;
-            const scaleY = this.physics.render.canvas.height / rect.height;
+            const scaleX = this.gameWidth / rect.width;
+            const scaleY = this.gameHeight / rect.height;
             const x = (touch.clientX - rect.left) * scaleX;
             const y = (touch.clientY - rect.top) * scaleY;
             
