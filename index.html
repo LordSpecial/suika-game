@@ -16,7 +16,7 @@
     @import url(https://fonts.bunny.net/css?family=azeret-mono:400,700,900);
 
     :root {
-      --col-bg: #FFD59D;
+      --col-bg: #000;
       --col-bg-light: #FFDCAE;
       --col-bg-lighter: #FFEEDB;
       --col-primary: #FF5300;
@@ -92,12 +92,14 @@
     #game-score {
       position: absolute;
       width: 100%;
-      border-bottom: 2px dotted #333;
+      border-bottom: 6px dashed red;
       font-size: 84px;
       font-weight: 900;
       padding-left: 16px;
       color: var(--col-bg-lighter);
       text-shadow: 3px 3px 0 var(--col-primary), -3px -3px 0 var(--col-primary), -3px 3px 0 var(--col-primary), 3px -3px 0 var(--col-primary);
+      /* Smooth opacity transitions when fruit moves - only affects text, not border */
+      transition: color 0.15s ease-in-out, text-shadow 0.15s ease-in-out;
     }
 
     #game-end-container {

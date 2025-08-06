@@ -124,6 +124,11 @@ export class Game {
                 }
             }
             
+            // Check for game over conditions during active gameplay
+            if (this.state === GAME_STATES.READY || this.state === GAME_STATES.DROP) {
+                this.checkGameOverConditions();
+            }
+            
             // Continue the loop
             this.gameUpdateLoop = requestAnimationFrame(updateGame);
         };
@@ -203,6 +208,72 @@ export class Game {
                 this.sounds[soundName].play();
             } catch (error) {
                 console.warn(`Failed to play sound ${soundName}:`, error);
+            }
+        }
+    }
+    
+    /**
+     * Update score opacity based on fruit position
+     */
+    updateScoreOpacity(fruitX) {
+        if (!this.elements.score) return;
+        
+        const tenPercent = this.gameWidth * 0.1;
+        const twentyPercent = this.gameWidth * 0.2;
+        
+        if (fruitX <= tenPercent) {
+            // Fruit is at 10% or less - minimum opacity of 5%
+            this.elements.score.style.color = 'rgba(255, 238, 219, 0.05)'; // --col-bg-lighter with 5% opacity
+            this.elements.score.style.textShadow = '3px 3px 0 rgba(255, 83, 0, 0.05), -3px -3px 0 rgba(255, 83, 0, 0.05), -3px 3px 0 rgba(255, 83, 0, 0.05), 3px -3px 0 rgba(255, 83, 0, 0.05)';
+        } else if (fruitX <= twentyPercent) {
+            // Fruit is between 10% and 20% - fade from 5% to 100%
+            const fadeZone = twentyPercent - tenPercent;
+            const positionInFade = fruitX - tenPercent;
+            const fadeRatio = positionInFade / fadeZone;
+            
+            // Linear interpolation from 0.05 (5%) to 1.0 (100%)
+            const opacity = 0.05 + (fadeRatio * 0.95);
+            this.elements.score.style.color = `rgba(255, 238, 219, ${opacity})`;
+            this.elements.score.style.textShadow = `3px 3px 0 rgba(255, 83, 0, ${opacity}), -3px -3px 0 rgba(255, 83, 0, ${opacity}), -3px 3px 0 rgba(255, 83, 0, ${opacity}), 3px -3px 0 rgba(255, 83, 0, ${opacity})`;
+        } else {
+            // Fruit is beyond 20% - full opacity, restore original colors
+            this.elements.score.style.color = 'var(--col-bg-lighter)';
+            this.elements.score.style.textShadow = '3px 3px 0 var(--col-primary), -3px -3px 0 var(--col-primary), -3px 3px 0 var(--col-primary), 3px -3px 0 var(--col-primary)';
+        }
+    }
+    
+    /**
+     * Check for game over conditions continuously
+     */
+    checkGameOverConditions() {
+        if (!this.physics || !this.physics.engine) return;
+        
+        const bodies = this.physics.engine.world.bodies;
+        const scaledLoseHeight = this.scalingSystem.getScaledConstant('loseHeight');
+        
+        for (const body of bodies) {
+            // Skip static bodies (walls) and preview balls
+            if (body.isStatic || body === this.elements.previewBall) continue;
+            
+            // Skip if body doesn't have a sizeIndex (not a fruit)
+            if (body.sizeIndex === undefined) continue;
+            
+            // Check if any part of the fruit is above the lose line
+            const fruitTop = body.position.y - body.circleRadius;
+            
+            // Condition 1: Any part above the line with upward velocity
+            if (fruitTop < scaledLoseHeight && body.velocity.y < 0) {
+                console.log(`🎯 Game over: Fruit above line with upward velocity (${body.velocity.y.toFixed(2)})`);
+                this.loseGame();
+                return;
+            }
+            
+            // Condition 2: 80% of fruit above the line with any velocity
+            const twentyPercentFromTop = fruitTop + (body.circleRadius * 2 * 0.2);
+            if (twentyPercentFromTop < scaledLoseHeight) {
+                console.log(`🎯 Game over: 80% of fruit above line with velocity (${body.velocity.y.toFixed(2)})`);
+                this.loseGame();
+                return;
             }
         }
     }
@@ -530,6 +601,12 @@ export class Game {
         this.score = 0;
         this.homeButtonBounds = null;
         
+        // Reset score colors to original
+        if (this.elements.score) {
+            this.elements.score.style.color = 'var(--col-bg-lighter)';
+            this.elements.score.style.textShadow = '3px 3px 0 var(--col-primary), -3px -3px 0 var(--col-primary), -3px 3px 0 var(--col-primary), 3px -3px 0 var(--col-primary)';
+        }
+        
         // Setup menu interaction
         this.setupMenuInteraction();
         
@@ -771,6 +848,12 @@ export class Game {
         this.elements.ui.style.display = 'block';
         this.elements.end.style.display = 'none';
         
+        // Reset score colors to original when starting game
+        if (this.elements.score) {
+            this.elements.score.style.color = 'var(--col-bg-lighter)';
+            this.elements.score.style.textShadow = '3px 3px 0 var(--col-primary), -3px -3px 0 var(--col-primary), -3px 3px 0 var(--col-primary), 3px -3px 0 var(--col-primary)';
+        }
+        
         // Create preview ball
         this.createPreviewBall();
         
@@ -818,6 +901,9 @@ export class Game {
             const x = (event.clientX - rect.left) * scaleX;
             
             this.elements.previewBall.position.x = x;
+            
+            // Update score opacity based on fruit position
+            this.updateScoreOpacity(x);
         };
         
         // Mouse/touch release for dropping fruit or home button
@@ -857,6 +943,9 @@ export class Game {
             const x = (touch.clientX - rect.left) * scaleX;
             
             this.elements.previewBall.position.x = x;
+            
+            // Update score opacity based on fruit position
+            this.updateScoreOpacity(x);
         };
         
         const handleTouchEnd = (event) => {
@@ -965,15 +1054,8 @@ export class Game {
                 // Skip if collision is with wall
                 if (bodyA.isStatic || bodyB.isStatic) continue;
                 
-                const aY = bodyA.position.y + bodyA.circleRadius;
-                const bY = bodyB.position.y + bodyB.circleRadius;
-                const scaledLoseHeight = this.scalingSystem.getScaledConstant('loseHeight');
-                
-                // Check if fruit is too high - game over condition
-                if (aY < scaledLoseHeight || bY < scaledLoseHeight) {
-                    this.loseGame();
-                    return;
-                }
+                // Old collision-based game over logic removed
+                // Now using continuous velocity-based checking
                 
                 // Skip if different sizes
                 if (bodyA.sizeIndex !== bodyB.sizeIndex) continue;
