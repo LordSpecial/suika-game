@@ -148,10 +148,38 @@ export class Game {
         const { sounds } = GAME_CONFIG.ASSETS;
         
         this.sounds.click = new Audio(sounds.click);
+        // Configure audio to be less intrusive on iOS
+        this.configureAudioForIOS(this.sounds.click);
         
         // Initialize pop sounds
         sounds.pop.forEach((soundPath, index) => {
             this.sounds[`pop${index}`] = new Audio(soundPath);
+            // Configure each pop sound for iOS compatibility
+            this.configureAudioForIOS(this.sounds[`pop${index}`]);
+        });
+    }
+    
+    /**
+     * Configure audio elements for iOS compatibility
+     */
+    configureAudioForIOS(audioElement) {        
+        // Prevent audio from taking over the session on iOS
+        audioElement.preload = 'auto';
+        
+        // Set audio to not interrupt background music on iOS
+        if ('webkitAudioContext' in window || 'AudioContext' in window) {
+            // For iOS Safari, try to use ambient audio mode
+            audioElement.setAttribute('playsinline', 'true');
+        }
+        
+        // Handle audio interruption gracefully
+        audioElement.addEventListener('pause', () => {
+            // Don't restart automatically if paused by system
+        });
+        
+        audioElement.addEventListener('ended', () => {
+            // Reset to beginning for reuse
+            audioElement.currentTime = 0;
         });
     }
     
