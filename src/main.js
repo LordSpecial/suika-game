@@ -28,6 +28,16 @@ if (document.readyState === 'loading') {
 // Handle window resize
 window.addEventListener('resize', handleResize);
 
+// Handle orientation change specifically for iOS
+window.addEventListener('orientationchange', () => {
+    // iOS needs a delay after orientation change
+    setTimeout(() => {
+        if (game) {
+            game.resize();
+        }
+    }, 100);
+});
+
 // Handle page visibility change (pause/resume)
 document.addEventListener('visibilitychange', () => {
     if (game) {

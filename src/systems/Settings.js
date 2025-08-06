@@ -12,6 +12,9 @@ export class Settings {
                 bounciness: 1, // 0 = low, 1 = medium, 2 = high
                 gravity: 1,    // 0 = low, 1 = medium, 2 = high
                 friction: 1    // 0 = low, 1 = medium, 2 = high
+            },
+            audio: {
+                muted: false // Whether all audio is muted
             }
         };
         
@@ -99,6 +102,30 @@ export class Settings {
     }
     
     /**
+     * Toggle mute state
+     */
+    toggleMute() {
+        this.settings.audio.muted = !this.settings.audio.muted;
+        this.saveSettings();
+        return this.settings.audio.muted;
+    }
+    
+    /**
+     * Get current mute state
+     */
+    isMuted() {
+        return this.settings.audio.muted;
+    }
+    
+    /**
+     * Set mute state
+     */
+    setMuted(muted) {
+        this.settings.audio.muted = muted;
+        this.saveSettings();
+    }
+    
+    /**
      * Reset to defaults
      */
     resetToDefaults() {
@@ -112,6 +139,9 @@ export class Settings {
                 bounciness: 1,
                 gravity: 1,
                 friction: 1
+            },
+            audio: {
+                muted: false
             }
         };
         this.saveSettings();

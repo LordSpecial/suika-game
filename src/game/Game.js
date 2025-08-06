@@ -10,7 +10,7 @@ export class Game {
         this.scalingSystem = new ScalingSystem();
         this.settings = new Settings();
         this.physics = new Physics();
-        this.menu = new Menu(this.scalingSystem);
+        this.menu = new Menu(this.scalingSystem, this.settings);
         this.settingsMenu = new SettingsMenu(this.scalingSystem, this.settings);
         
         this.state = GAME_STATES.MENU;
@@ -167,10 +167,14 @@ export class Game {
         audioElement.preload = 'auto';
         
         // Set audio to not interrupt background music on iOS
-        if ('webkitAudioContext' in window || 'AudioContext' in window) {
-            // For iOS Safari, try to use ambient audio mode
-            audioElement.setAttribute('playsinline', 'true');
-        }
+        audioElement.setAttribute('playsinline', 'true');
+        
+        // iOS-specific audio session configuration
+        // This allows the audio to play without interrupting background music
+        audioElement.setAttribute('webkit-playsinline', 'true');
+        
+        // Set volume to reasonable level
+        audioElement.volume = 0.7;
         
         // Handle audio interruption gracefully
         audioElement.addEventListener('pause', () => {
@@ -181,6 +185,26 @@ export class Game {
             // Reset to beginning for reuse
             audioElement.currentTime = 0;
         });
+        
+        // Handle loading errors gracefully
+        audioElement.addEventListener('error', (e) => {
+            console.warn('Audio loading failed:', e);
+        });
+    }
+    
+    /**
+     * Play sound with mute check
+     */
+    playSound(soundName) {
+        if (!this.settings.isMuted() && this.sounds[soundName]) {
+            try {
+                // Reset current time to allow rapid successive plays
+                this.sounds[soundName].currentTime = 0;
+                this.sounds[soundName].play();
+            } catch (error) {
+                console.warn(`Failed to play sound ${soundName}:`, error);
+            }
+        }
     }
     
     /**
@@ -205,6 +229,8 @@ export class Game {
                     this.startGame();
                 } else if (action === 'openSettings') {
                     this.openSettings();
+                } else if (action === 'toggleMute') {
+                    this.toggleMute();
                 }
             } else if (this.state === GAME_STATES.SETTINGS) {
                 const action = this.settingsMenu.handleClick(x, y);
@@ -376,19 +402,25 @@ export class Game {
             container.style.maxWidth = 'none';
         }
         
-        // Ensure body and html take full viewport
+        // Ensure proper full-screen display (iOS-compatible)
         document.documentElement.style.height = '100%';
         document.documentElement.style.margin = '0';
         document.documentElement.style.padding = '0';
+        document.documentElement.style.overflow = 'hidden';
         
         document.body.style.display = 'flex';
         document.body.style.justifyContent = 'center';
         document.body.style.alignItems = 'center';
-        document.body.style.height = '100vh';
+        // Use the CSS custom property for better iOS support
+        document.body.style.height = 'calc(var(--vh, 1vh) * 100)';
         document.body.style.width = '100vw';
         document.body.style.margin = '0';
         document.body.style.padding = '0';
-        document.body.style.overflow = 'hidden'; // Prevent scrollbars
+        document.body.style.overflow = 'hidden';
+        // Additional iOS-specific styles
+        document.body.style.overscrollBehavior = 'none';
+        document.body.style.webkitUserSelect = 'none';
+        document.body.style.webkitTouchCallout = 'none';
     }
     
     /**
@@ -459,10 +491,23 @@ export class Game {
      * Open settings menu
      */
     openSettings() {
-        this.sounds.click.play();
+        this.playSound('click');
         this.state = GAME_STATES.SETTINGS;
         this.settingsMenu.resetView();
         this.startMenuRendering();
+    }
+    
+    /**
+     * Toggle mute state
+     */
+    toggleMute() {
+        const isMuted = this.settings.toggleMute();
+        console.log(`🔊 Audio ${isMuted ? 'muted' : 'unmuted'}`);
+        
+        // Play a click sound to confirm the action (only if unmuting)
+        if (!isMuted) {
+            this.playSound('click');
+        }
     }
     
     /**
@@ -496,7 +541,7 @@ export class Game {
      * Close settings menu and return to main menu
      */
     closeSettings() {
-        this.sounds.click.play();
+        this.playSound('click');
         this.state = GAME_STATES.MENU;
         this.startMenuRendering();
     }
@@ -710,7 +755,7 @@ export class Game {
      * Start the game
      */
     startGame() {
-        this.sounds.click.play();
+        this.playSound('click');
         
         this.state = GAME_STATES.READY;
         
@@ -864,7 +909,7 @@ export class Game {
     addFruit(x) {
         if (this.state !== GAME_STATES.READY) return;
         
-        this.sounds.click.play();
+        this.playSound('click');
         
         this.state = GAME_STATES.DROP;
         const scaledHeight = this.scalingSystem.getScaledConstant('previewBallHeight');
@@ -953,9 +998,7 @@ export class Game {
                 bodyB.popped = true;
                 
                 // Play pop sound
-                if (this.sounds[`pop${bodyA.sizeIndex}`]) {
-                    this.sounds[`pop${bodyA.sizeIndex}`].play();
-                }
+                this.playSound(`pop${bodyA.sizeIndex}`);
                 
                 // Remove old fruits and add new merged fruit
                 this.physics.removeBodies([bodyA, bodyB]);

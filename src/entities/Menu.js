@@ -1,11 +1,13 @@
 import { GAME_CONFIG } from '../utils/Config.js';
 
 export class Menu {
-    constructor(scalingSystem) {
+    constructor(scalingSystem, settings) {
         this.scalingSystem = scalingSystem;
+        this.settings = settings;
         this.menuImages = {};
         this.startButtonBounds = null;
         this.settingsButtonBounds = null;
+        this.muteButtonBounds = null;
         this.loadImages();
     }
     
@@ -104,31 +106,62 @@ export class Menu {
             ctx.drawImage(this.menuImages.startButton, buttonX, buttonY, buttonWidth, buttonHeight);
         }
         
-        // Draw settings button (smaller, positioned in corner)
-        const settingsButtonSize = 80 * scale;
-        const settingsX = gameWidth - settingsButtonSize - (20 * scale);
-        const settingsY = 20 * scale;
+        // Draw mute and settings buttons (positioned in top-right corner)
+        const buttonSize = 80 * scale;
+        const buttonSpacing = 20 * scale;
+        const margin = 20 * scale;
+        
+        // Mute button (left of settings button)
+        const muteX = gameWidth - (2 * buttonSize) - (2 * buttonSpacing) - margin;
+        const muteY = margin;
+        
+        // Store mute button bounds
+        this.muteButtonBounds = {
+            x: muteX,
+            y: muteY,
+            width: buttonSize,
+            height: buttonSize
+        };
+        
+        // Draw mute button background
+        const isMuted = this.settings && this.settings.isMuted();
+        ctx.fillStyle = isMuted ? '#FFAAAA' : '#F5F5DC'; // Red tint when muted
+        ctx.fillRect(muteX, muteY, buttonSize, buttonSize);
+        ctx.strokeStyle = '#8B4513';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(muteX, muteY, buttonSize, buttonSize);
+        
+        // Draw mute icon
+        ctx.fillStyle = '#2C1810';
+        ctx.font = `900 ${28 * scale}px 'Azeret Mono', monospace`;
+        ctx.textAlign = 'center';
+        const muteIcon = isMuted ? '🔇' : '🔊';
+        ctx.fillText(muteIcon, muteX + buttonSize/2, muteY + buttonSize/2 + 8 * scale);
+        
+        // Settings button (right of mute button)
+        const settingsX = gameWidth - buttonSize - margin;
+        const settingsY = margin;
         
         // Store settings button bounds
         this.settingsButtonBounds = {
             x: settingsX,
             y: settingsY,
-            width: settingsButtonSize,
-            height: settingsButtonSize
+            width: buttonSize,
+            height: buttonSize
         };
         
         // Draw settings button background
         ctx.fillStyle = '#F5F5DC';
-        ctx.fillRect(settingsX, settingsY, settingsButtonSize, settingsButtonSize);
+        ctx.fillRect(settingsX, settingsY, buttonSize, buttonSize);
         ctx.strokeStyle = '#8B4513';
         ctx.lineWidth = 3;
-        ctx.strokeRect(settingsX, settingsY, settingsButtonSize, settingsButtonSize);
+        ctx.strokeRect(settingsX, settingsY, buttonSize, buttonSize);
         
         // Draw settings icon (gear shape)
         ctx.fillStyle = '#2C1810';
         ctx.font = `900 ${32 * scale}px 'Azeret Mono', monospace`;
         ctx.textAlign = 'center';
-        ctx.fillText('⚙', settingsX + settingsButtonSize/2, settingsY + settingsButtonSize/2 + 8 * scale);
+        ctx.fillText('⚙', settingsX + buttonSize/2, settingsY + buttonSize/2 + 8 * scale);
     }
     
     /**
@@ -163,6 +196,19 @@ export class Menu {
     }
     
     /**
+     * Check if a point is within the mute button
+     */
+    isPointInMuteButton(x, y) {
+        if (!this.muteButtonBounds) return false;
+        
+        const bounds = this.muteButtonBounds;
+        return x >= bounds.x && 
+               x <= bounds.x + bounds.width && 
+               y >= bounds.y && 
+               y <= bounds.y + bounds.height;
+    }
+    
+    /**
      * Handle click events on the menu
      */
     handleClick(x, y) {
@@ -173,6 +219,10 @@ export class Menu {
         
         if (this.isPointInSettingsButton(x, y)) {
             return 'openSettings';
+        }
+        
+        if (this.isPointInMuteButton(x, y)) {
+            return 'toggleMute';
         }
         
         return null;
