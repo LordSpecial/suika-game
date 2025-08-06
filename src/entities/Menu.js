@@ -126,7 +126,7 @@ export class Menu {
         
         // Draw settings icon (gear shape)
         ctx.fillStyle = '#2C1810';
-        ctx.font = `bold ${32 * scale}px Arial`;
+        ctx.font = `900 ${32 * scale}px 'Azeret Mono', monospace`;
         ctx.textAlign = 'center';
         ctx.fillText('⚙', settingsX + settingsButtonSize/2, settingsY + settingsButtonSize/2 + 8 * scale);
     }

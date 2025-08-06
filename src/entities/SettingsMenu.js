@@ -62,7 +62,7 @@ export class SettingsMenu {
         
         // Title
         ctx.fillStyle = '#2C1810';
-        ctx.font = `bold ${32 * scale}px Arial`;
+        ctx.font = `900 ${32 * scale}px 'Azeret Mono', monospace`;
         ctx.textAlign = 'center';
         ctx.fillText('Settings', centerX, currentY);
         
@@ -73,7 +73,7 @@ export class SettingsMenu {
         currentY += buttonHeight + spacing;
         
         // Physics settings title
-        ctx.font = `bold ${24 * scale}px Arial`;
+        ctx.font = `700 ${24 * scale}px 'Azeret Mono', monospace`;
         ctx.fillText('Physics', centerX, currentY + 20 * scale);
         currentY += 50 * scale;
         
@@ -100,7 +100,7 @@ export class SettingsMenu {
         ['bounciness', 'gravity', 'friction'].forEach(type => {
             // Label
             ctx.fillStyle = '#2C1810';
-            ctx.font = `${18 * scale}px Arial`;
+            ctx.font = `700 ${18 * scale}px 'Azeret Mono', monospace`;
             ctx.textAlign = 'center';
             ctx.fillText(type.charAt(0).toUpperCase() + type.slice(1), centerX, currentY);
             
@@ -121,7 +121,7 @@ export class SettingsMenu {
                 
                 // Button text
                 ctx.fillStyle = isSelected ? '#FFF' : '#333';
-                ctx.font = `${12 * scale}px Arial`;
+                ctx.font = `700 ${12 * scale}px 'Azeret Mono', monospace`;
                 ctx.textAlign = 'center';
                 ctx.fillText(presetNames[type][i], x, y + buttonSize/2 + 4 * scale);
                 
@@ -153,7 +153,7 @@ export class SettingsMenu {
         
         // Title
         ctx.fillStyle = '#2C1810';
-        ctx.font = `bold ${32 * scale}px Arial`;
+        ctx.font = `900 ${32 * scale}px 'Azeret Mono', monospace`;
         ctx.textAlign = 'center';
         ctx.fillText('Themes', centerX, currentY);
         
@@ -211,7 +211,7 @@ export class SettingsMenu {
         
         // Button text
         ctx.fillStyle = '#2C1810';
-        ctx.font = `bold ${18 * this.scalingSystem.getScale()}px Arial`;
+        ctx.font = `700 ${18 * this.scalingSystem.getScale()}px 'Azeret Mono', monospace`;
         ctx.textAlign = 'center';
         ctx.fillText(text, x + width/2, y + height/2 + 6);
         
