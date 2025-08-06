@@ -4,8 +4,8 @@ export class Settings {
     constructor() {
         this.settings = {
             theme: {
-                balls: 'realFruits', // realFruits, cartoonFruits
-                background: 'default', // default only
+                balls: 'realFruits', // realFruits, cartoonFruits, planets
+                background: 'default', // default, space
                 sounds: 'default' // default only
             },
             physics: {
@@ -133,8 +133,8 @@ export class Settings {
      */
     getThemeOptions() {
         return {
-            balls: ['Real Fruits', 'Cartoon Fruits'],
-            background: ['Default'],
+            balls: ['Real Fruits', 'Cartoon Fruits', 'Planets'],
+            background: ['Default', 'Space'],
             sounds: ['Default']
         };
     }

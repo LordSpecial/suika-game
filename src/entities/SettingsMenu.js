@@ -159,9 +159,9 @@ export class SettingsMenu {
         
         currentY += 60 * scale;
         
-        // Only show ball theme option (background and sounds have only one option)
-        const currentSelection = this.settings.settings.theme.balls;
-        const displayName = this.getThemeDisplayName('balls', currentSelection);
+        // Ball theme selector
+        const currentBallSelection = this.settings.settings.theme.balls;
+        const ballDisplayName = this.getThemeDisplayName('balls', currentBallSelection);
         
         this.drawButton(
             ctx, 
@@ -169,9 +169,25 @@ export class SettingsMenu {
             currentY, 
             buttonWidth, 
             buttonHeight, 
-            `Ball Theme: ${displayName}`,
+            `Ball Theme: ${ballDisplayName}`,
             'theme_category',
             'balls'
+        );
+        currentY += buttonHeight + spacing;
+        
+        // Background theme selector
+        const currentBgSelection = this.settings.settings.theme.background;
+        const bgDisplayName = this.getThemeDisplayName('background', currentBgSelection);
+        
+        this.drawButton(
+            ctx, 
+            centerX - buttonWidth/2, 
+            currentY, 
+            buttonWidth, 
+            buttonHeight, 
+            `Background: ${bgDisplayName}`,
+            'theme_category',
+            'background'
         );
         currentY += buttonHeight + spacing;
         
@@ -215,8 +231,8 @@ export class SettingsMenu {
      */
     getThemeDisplayName(category, value) {
         const mapping = {
-            balls: { realFruits: 'Real Fruits', cartoonFruits: 'Cartoon Fruits' },
-            background: { default: 'Default' },
+            balls: { realFruits: 'Real Fruits', cartoonFruits: 'Cartoon Fruits', planets: 'Planets' },
+            background: { default: 'Default', space: 'Space' },
             sounds: { default: 'Default' }
         };
         
@@ -270,8 +286,8 @@ export class SettingsMenu {
      */
     cycleThemeOption(category) {
         const options = {
-            balls: ['realFruits', 'cartoonFruits'],
-            background: ['default'],
+            balls: ['realFruits', 'cartoonFruits', 'planets'],
+            background: ['default', 'space'],
             sounds: ['default']
         };
         

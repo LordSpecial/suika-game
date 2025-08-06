@@ -90,6 +90,21 @@ export class ScalingSystem {
     }
     
     /**
+     * Update cached fruit theme images whilst preserving physics properties
+     */
+    updateThemeImages(newFruits) {
+        if (!this.baseFruitSizes || !newFruits) return;
+        
+        // Update only image properties in the cached base fruit sizes
+        newFruits.forEach((newFruit, index) => {
+            if (this.baseFruitSizes[index]) {
+                this.baseFruitSizes[index].img = newFruit.img;
+                this.baseFruitSizes[index].imgSize = newFruit.imgSize;
+            }
+        });
+    }
+    
+    /**
      * Apply CSS scaling to UI elements
      */
     scaleUIElements() {

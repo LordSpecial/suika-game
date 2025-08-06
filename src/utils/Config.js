@@ -83,7 +83,7 @@ export const GAME_CONFIG = {
             pop: Array.from({length: 11}, (_, i) => `./assets/pop${i}.mp3`)
         },
         images: {
-            background: './assets/img/background.png',
+            background: './assets/img/backgrounds/background.png',
             menuBackground: './assets/img/bg-menu.png',
             startButton: './assets/img/btn-start.png',
             popEffect: './assets/img/pop.png'
@@ -123,12 +123,33 @@ export const GAME_CONFIG = {
                     { radius: 160, scoreValue: 55, img: './assets/img/cartoonFruits/circle9.png',  imgSize: 1024 },
                     { radius: 192, scoreValue: 66, img: './assets/img/cartoonFruits/circle10.png', imgSize: 1024 }
                 ]
+            },
+            planets: {
+                name: 'Planets',
+                items: [
+                    { radius: 24,  scoreValue: 1,  img: './assets/img/planets/1_pluto.png',    imgSize: 512 },
+                    { radius: 32,  scoreValue: 3,  img: './assets/img/planets/2_moon.png',     imgSize: 512 },
+                    { radius: 40,  scoreValue: 6,  img: './assets/img/planets/3_mercury.png',  imgSize: 512 },
+                    { radius: 56,  scoreValue: 10, img: './assets/img/planets/4_mars.png',     imgSize: 512 },
+                    { radius: 64,  scoreValue: 15, img: './assets/img/planets/5_venus.png',    imgSize: 512 },
+                    { radius: 72,  scoreValue: 21, img: './assets/img/planets/6_earth.png',    imgSize: 512 },
+                    { radius: 84,  scoreValue: 28, img: './assets/img/planets/7_neptune.png',  imgSize: 512 },
+                    { radius: 96,  scoreValue: 36, img: './assets/img/planets/8_uranus.png',   imgSize: 512 },
+                    { radius: 128, scoreValue: 45, img: './assets/img/planets/9_saturn.png',   imgSize: 512 },
+                    { radius: 160, scoreValue: 55, img: './assets/img/planets/10_jupiter.png', imgSize: 512 },
+                    { radius: 192, scoreValue: 66, img: './assets/img/planets/11_sun.png',     imgSize: 512 }
+                ]
             }
         },
         BACKGROUNDS: {
             default: {
                 name: 'Default',
-                background: './assets/img/background.png',
+                background: './assets/img/backgrounds/background.png',
+                menuBackground: './assets/img/bg-menu.png'
+            },
+            space: {
+                name: 'Space',
+                background: './assets/img/backgrounds/BG3.png',
                 menuBackground: './assets/img/bg-menu.png'
             }
         },

@@ -510,6 +510,9 @@ export class Game {
         // Update fruit images based on selected theme
         this.updateFruitTheme(theme.balls);
         
+        // Update cached fruit images in scaling system
+        this.scalingSystem.updateThemeImages(GAME_CONFIG.FRUITS);
+        
         // Update background images
         this.updateBackgroundTheme(theme.background);
         
@@ -622,8 +625,13 @@ export class Game {
             return;
         }
         
-        // Replace the FRUITS config with the selected theme
-        GAME_CONFIG.FRUITS = ballTheme.items;
+        // Update only the image paths while preserving gameplay mechanics
+        ballTheme.items.forEach((themeItem, index) => {
+            if (GAME_CONFIG.FRUITS[index]) {
+                GAME_CONFIG.FRUITS[index].img = themeItem.img;
+                GAME_CONFIG.FRUITS[index].imgSize = themeItem.imgSize;
+            }
+        });
     }
     
     /**
