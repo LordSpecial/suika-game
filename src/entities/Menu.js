@@ -1,50 +1,32 @@
 import { GAME_CONFIG } from '../utils/Config.js';
+import { Renderer } from '../rendering/Renderer.js';
 
 export class Menu {
     constructor(scalingSystem, settings) {
         this.scalingSystem = scalingSystem;
         this.settings = settings;
         this.menuImages = {};
+        this.fruitImages = {};  // Separate property for fruit images
         this.startButtonBounds = null;
         this.settingsButtonBounds = null;
         this.muteButtonBounds = null;
-        this.loadImages();
-    }
-    
-    /**
-     * Load all menu-related images
-     */
-    loadImages() {
-        const { images } = GAME_CONFIG.ASSETS;
-        const { FRUITS } = GAME_CONFIG;
-        
-        // Load menu background
-        this.menuImages.background = new Image();
-        this.menuImages.background.src = images.menuBackground;
-        
-        // Load start button
-        this.menuImages.startButton = new Image();
-        this.menuImages.startButton.src = images.startButton;
-        
-        // Load fruit images
-        this.menuImages.fruits = [];
-        FRUITS.forEach((fruit, index) => {
-            const img = new Image();
-            img.src = fruit.img;
-            this.menuImages.fruits[index] = img;
-        });
+        this.renderer = null; // Will be set when render is called
     }
     
     /**
      * Render the menu on canvas
      */
     render(ctx, gameWidth, gameHeight) {
+        // Create renderer if needed
+        if (!this.renderer) {
+            this.renderer = new Renderer(ctx.canvas, this.scalingSystem);
+        }
+        
         const { MENU, FRUITS } = GAME_CONFIG;
         const scale = this.scalingSystem.getScale();
         
-        
         // Clear canvas
-        ctx.clearRect(0, 0, gameWidth, gameHeight);
+        this.renderer.clear();
         
         // Draw menu background - adjust position for variable aspect ratios
         const bgSize = MENU.backgroundSize * scale;
@@ -55,8 +37,8 @@ export class Menu {
         const bgYPercent = aspectRatio < 0.5 ? 0.3 : MENU.backgroundY; // Move up on very tall screens
         const bgY = gameHeight * bgYPercent - bgSize / 2;
         
-        if (this.menuImages.background.complete) {
-            ctx.drawImage(this.menuImages.background, bgX, bgY, bgSize, bgSize);
+        if (this.menuImages.background && this.menuImages.background.complete) {
+            this.renderer.drawImage(this.menuImages.background, bgX, bgY, bgSize, bgSize);
         }
         
         // Draw fruit circle
@@ -70,12 +52,12 @@ export class Menu {
             const x = centerX + circleRadius * Math.cos(angle);
             const y = centerY + circleRadius * Math.sin(angle);
             
-            if (this.menuImages.fruits[index] && this.menuImages.fruits[index].complete) {
+            if (this.fruitImages && this.fruitImages[index] && this.fruitImages[index].complete) {
                 const fruitSize = fruitRadius * 2;
-                ctx.drawImage(
-                    this.menuImages.fruits[index],
-                    x - fruitRadius,
-                    y - fruitRadius,
+                this.renderer.drawImageCentered(
+                    this.fruitImages[index],
+                    x,
+                    y,
                     fruitSize,
                     fruitSize
                 );
@@ -102,8 +84,8 @@ export class Menu {
         };
         
         
-        if (this.menuImages.startButton.complete) {
-            ctx.drawImage(this.menuImages.startButton, buttonX, buttonY, buttonWidth, buttonHeight);
+        if (this.menuImages.startButton && this.menuImages.startButton.complete) {
+            this.renderer.drawImage(this.menuImages.startButton, buttonX, buttonY, buttonWidth, buttonHeight);
         }
         
         // Draw mute and settings buttons (positioned in top-right corner)
@@ -125,18 +107,16 @@ export class Menu {
         
         // Draw mute button background
         const isMuted = this.settings && this.settings.isMuted();
-        ctx.fillStyle = isMuted ? '#FFAAAA' : '#F5F5DC'; // Red tint when muted
-        ctx.fillRect(muteX, muteY, buttonSize, buttonSize);
-        ctx.strokeStyle = '#8B4513';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(muteX, muteY, buttonSize, buttonSize);
+        this.renderer.fillRect(muteX, muteY, buttonSize, buttonSize, isMuted ? '#FFAAAA' : '#F5F5DC');
+        this.renderer.strokeRect(muteX, muteY, buttonSize, buttonSize, '#8B4513', 3);
         
         // Draw mute icon
-        ctx.fillStyle = '#2C1810';
-        ctx.font = `900 ${28 * scale}px 'Azeret Mono', monospace`;
-        ctx.textAlign = 'center';
         const muteIcon = isMuted ? '🔇' : '🔊';
-        ctx.fillText(muteIcon, muteX + buttonSize/2, muteY + buttonSize/2 + 8 * scale);
+        this.renderer.drawText(muteIcon, muteX + buttonSize/2, muteY + buttonSize/2 + 8 * scale, {
+            font: `900 ${28 * scale}px 'Azeret Mono', monospace`,
+            fillStyle: '#2C1810',
+            textAlign: 'center'
+        });
         
         // Settings button (right of mute button)
         const settingsX = gameWidth - buttonSize - margin;
@@ -151,17 +131,15 @@ export class Menu {
         };
         
         // Draw settings button background
-        ctx.fillStyle = '#F5F5DC';
-        ctx.fillRect(settingsX, settingsY, buttonSize, buttonSize);
-        ctx.strokeStyle = '#8B4513';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(settingsX, settingsY, buttonSize, buttonSize);
+        this.renderer.fillRect(settingsX, settingsY, buttonSize, buttonSize, '#F5F5DC');
+        this.renderer.strokeRect(settingsX, settingsY, buttonSize, buttonSize, '#8B4513', 3);
         
         // Draw settings icon (gear shape)
-        ctx.fillStyle = '#2C1810';
-        ctx.font = `900 ${32 * scale}px 'Azeret Mono', monospace`;
-        ctx.textAlign = 'center';
-        ctx.fillText('⚙', settingsX + buttonSize/2, settingsY + buttonSize/2 + 8 * scale);
+        this.renderer.drawText('⚙', settingsX + buttonSize/2, settingsY + buttonSize/2 + 8 * scale, {
+            font: `900 ${32 * scale}px 'Azeret Mono', monospace`,
+            fillStyle: '#2C1810',
+            textAlign: 'center'
+        });
     }
     
     /**

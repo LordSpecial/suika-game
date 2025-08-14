@@ -1,4 +1,5 @@
 import { GAME_CONFIG } from '../utils/Config.js';
+import { Renderer } from '../rendering/Renderer.js';
 
 export class SettingsMenu {
     constructor(scalingSystem, settings) {
@@ -8,39 +9,31 @@ export class SettingsMenu {
         this.currentView = 'main'; // main, themes
         this.currentThemeCategory = null; // balls, background, sounds
         this.clickableElements = [];
-        
-        this.loadImages();
-    }
-    
-    /**
-     * Load menu images
-     */
-    loadImages() {
-        // Load basic UI elements
-        this.menuImages.background = new Image();
-        this.menuImages.background.src = GAME_CONFIG.ASSETS.images.menuBackground;
-        
-        this.menuImages.button = new Image();
-        this.menuImages.button.src = GAME_CONFIG.ASSETS.images.startButton;
+        this.renderer = null; // Will be set when render is called
     }
     
     /**
      * Render the settings menu
      */
     render(ctx, gameWidth, gameHeight) {
+        // Create renderer if needed
+        if (!this.renderer) {
+            this.renderer = new Renderer(ctx.canvas, this.scalingSystem);
+        }
+        
         const scale = this.scalingSystem.getScale();
         this.clickableElements = [];
         
         // Clear canvas
-        ctx.clearRect(0, 0, gameWidth, gameHeight);
+        this.renderer.clear();
         
         // Draw background
         const bgSize = GAME_CONFIG.MENU.backgroundSize * scale;
         const bgX = gameWidth / 2 - bgSize / 2;
         const bgY = gameHeight * 0.1;
         
-        if (this.menuImages.background.complete) {
-            ctx.drawImage(this.menuImages.background, bgX, bgY, bgSize, bgSize);
+        if (this.menuImages.background && this.menuImages.background.complete) {
+            this.renderer.drawImage(this.menuImages.background, bgX, bgY, bgSize, bgSize);
         }
         
         if (this.currentView === 'main') {
@@ -61,10 +54,11 @@ export class SettingsMenu {
         const spacing = 20 * scale;
         
         // Title
-        ctx.fillStyle = '#2C1810';
-        ctx.font = `900 ${32 * scale}px 'Azeret Mono', monospace`;
-        ctx.textAlign = 'center';
-        ctx.fillText('Settings', centerX, currentY);
+        this.renderer.drawText('Settings', centerX, currentY, {
+            font: `900 ${32 * scale}px 'Azeret Mono', monospace`,
+            fillStyle: '#2C1810',
+            textAlign: 'center'
+        });
         
         currentY += 60 * scale;
         
@@ -73,8 +67,11 @@ export class SettingsMenu {
         currentY += buttonHeight + spacing;
         
         // Physics settings title
-        ctx.font = `700 ${24 * scale}px 'Azeret Mono', monospace`;
-        ctx.fillText('Physics', centerX, currentY + 20 * scale);
+        this.renderer.drawText('Physics', centerX, currentY + 20 * scale, {
+            font: `700 ${24 * scale}px 'Azeret Mono', monospace`,
+            fillStyle: '#2C1810',
+            textAlign: 'center'
+        });
         currentY += 50 * scale;
         
         // Physics controls
@@ -99,10 +96,11 @@ export class SettingsMenu {
         
         ['bounciness', 'gravity', 'friction'].forEach(type => {
             // Label
-            ctx.fillStyle = '#2C1810';
-            ctx.font = `700 ${18 * scale}px 'Azeret Mono', monospace`;
-            ctx.textAlign = 'center';
-            ctx.fillText(type.charAt(0).toUpperCase() + type.slice(1), centerX, currentY);
+            this.renderer.drawText(type.charAt(0).toUpperCase() + type.slice(1), centerX, currentY, {
+                font: `700 ${18 * scale}px 'Azeret Mono', monospace`,
+                fillStyle: '#2C1810',
+                textAlign: 'center'
+            });
             
             // Three option buttons
             for (let i = 0; i < 3; i++) {
@@ -111,19 +109,17 @@ export class SettingsMenu {
                 const isSelected = physics[type] === i;
                 
                 // Button background
-                ctx.fillStyle = isSelected ? '#4CAF50' : '#E0E0E0';
-                ctx.fillRect(x - buttonSize/2, y, buttonSize, buttonSize);
+                this.renderer.fillRect(x - buttonSize/2, y, buttonSize, buttonSize, isSelected ? '#4CAF50' : '#E0E0E0');
                 
                 // Button border
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(x - buttonSize/2, y, buttonSize, buttonSize);
+                this.renderer.strokeRect(x - buttonSize/2, y, buttonSize, buttonSize, '#333', 2);
                 
                 // Button text
-                ctx.fillStyle = isSelected ? '#FFF' : '#333';
-                ctx.font = `700 ${12 * scale}px 'Azeret Mono', monospace`;
-                ctx.textAlign = 'center';
-                ctx.fillText(presetNames[type][i], x, y + buttonSize/2 + 4 * scale);
+                this.renderer.drawText(presetNames[type][i], x, y + buttonSize/2 + 4 * scale, {
+                    font: `700 ${12 * scale}px 'Azeret Mono', monospace`,
+                    fillStyle: isSelected ? '#FFF' : '#333',
+                    textAlign: 'center'
+                });
                 
                 // Store clickable area
                 this.clickableElements.push({
@@ -152,10 +148,11 @@ export class SettingsMenu {
         const spacing = 20 * scale;
         
         // Title
-        ctx.fillStyle = '#2C1810';
-        ctx.font = `900 ${32 * scale}px 'Azeret Mono', monospace`;
-        ctx.textAlign = 'center';
-        ctx.fillText('Themes', centerX, currentY);
+        this.renderer.drawText('Themes', centerX, currentY, {
+            font: `900 ${32 * scale}px 'Azeret Mono', monospace`,
+            fillStyle: '#2C1810',
+            textAlign: 'center'
+        });
         
         currentY += 60 * scale;
         
@@ -201,19 +198,17 @@ export class SettingsMenu {
      */
     drawButton(ctx, x, y, width, height, text, action, data = null) {
         // Button background
-        ctx.fillStyle = '#F5F5DC';
-        ctx.fillRect(x, y, width, height);
+        this.renderer.fillRect(x, y, width, height, '#F5F5DC');
         
         // Button border
-        ctx.strokeStyle = '#8B4513';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(x, y, width, height);
+        this.renderer.strokeRect(x, y, width, height, '#8B4513', 3);
         
         // Button text
-        ctx.fillStyle = '#2C1810';
-        ctx.font = `700 ${18 * this.scalingSystem.getScale()}px 'Azeret Mono', monospace`;
-        ctx.textAlign = 'center';
-        ctx.fillText(text, x + width/2, y + height/2 + 6);
+        this.renderer.drawText(text, x + width/2, y + height/2 + 6, {
+            font: `700 ${18 * this.scalingSystem.getScale()}px 'Azeret Mono', monospace`,
+            fillStyle: '#2C1810',
+            textAlign: 'center'
+        });
         
         // Store clickable area
         this.clickableElements.push({

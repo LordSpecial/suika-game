@@ -4,9 +4,13 @@ import { Settings } from '../systems/Settings.js';
 import { Physics } from './Physics.js';
 import { Menu } from '../entities/Menu.js';
 import { SettingsMenu } from '../entities/SettingsMenu.js';
+import { eventSystem, GAME_EVENTS } from '../systems/EventSystem.js';
+import { ResourceManager } from '../systems/ResourceManager.js';
 
 export class Game {
     constructor() {
+        this.eventSystem = eventSystem; // Use singleton instance
+        this.resourceManager = new ResourceManager(this.eventSystem);
         this.scalingSystem = new ScalingSystem();
         this.settings = new Settings();
         this.physics = new Physics();
@@ -47,14 +51,16 @@ export class Game {
         // Physics update flag
         this.physicsNeedsUpdate = false;
         
-        this.initializeSounds();
+        // Don't initialize sounds here anymore - will be loaded via ResourceManager
         this.initializeFruits();
     }
     
     /**
      * Initialize the game
      */
-    init() {
+    async init() {
+        // Preload all resources first
+        await this.preloadResources();
         // Calculate initial dimensions
         this.resize();
         
@@ -147,54 +153,50 @@ export class Game {
     }
     
     /**
-     * Initialize sounds
+     * Preload all game resources
      */
-    initializeSounds() {
-        const { sounds } = GAME_CONFIG.ASSETS;
+    async preloadResources() {
+        // Create resource manifest
+        const manifest = ResourceManager.createManifestFromConfig(GAME_CONFIG);
         
-        this.sounds.click = new Audio(sounds.click);
-        // Configure audio to be less intrusive on iOS
-        this.configureAudioForIOS(this.sounds.click);
+        // Add listener for loading progress
+        const progressHandler = (data) => {
+            console.log(`Loading resources: ${data.percentage.toFixed(0)}%`);
+        };
+        this.eventSystem.on('resource:load:progress', progressHandler);
         
-        // Initialize pop sounds
-        sounds.pop.forEach((soundPath, index) => {
-            this.sounds[`pop${index}`] = new Audio(soundPath);
-            // Configure each pop sound for iOS compatibility
-            this.configureAudioForIOS(this.sounds[`pop${index}`]);
-        });
+        try {
+            // Load all resources
+            await this.resourceManager.loadAll(manifest);
+            
+            // Setup sounds from loaded resources
+            this.setupSoundsFromResources();
+            
+            // Update menu images
+            this.updateMenuImages();
+            
+            console.log('All resources loaded successfully');
+        } catch (error) {
+            console.error('Failed to load resources:', error);
+        } finally {
+            // Remove progress listener
+            this.eventSystem.off('resource:load:progress', progressHandler);
+        }
     }
     
     /**
-     * Configure audio elements for iOS compatibility
+     * Setup sounds from loaded resources
      */
-    configureAudioForIOS(audioElement) {        
-        // Prevent audio from taking over the session on iOS
-        audioElement.preload = 'auto';
+    setupSoundsFromResources() {
+        // Get sounds from ResourceManager
+        this.sounds.click = this.resourceManager.getSound('click');
         
-        // Set audio to not interrupt background music on iOS
-        audioElement.setAttribute('playsinline', 'true');
+        // Get pop sounds
+        for (let i = 0; i < 11; i++) {
+            this.sounds[`pop${i}`] = this.resourceManager.getSound(`pop${i}`);
+        }
         
-        // iOS-specific audio session configuration
-        // This allows the audio to play without interrupting background music
-        audioElement.setAttribute('webkit-playsinline', 'true');
-        
-        // Set volume to reasonable level
-        audioElement.volume = 0.7;
-        
-        // Handle audio interruption gracefully
-        audioElement.addEventListener('pause', () => {
-            // Don't restart automatically if paused by system
-        });
-        
-        audioElement.addEventListener('ended', () => {
-            // Reset to beginning for reuse
-            audioElement.currentTime = 0;
-        });
-        
-        // Handle loading errors gracefully
-        audioElement.addEventListener('error', (e) => {
-            console.warn('Audio loading failed:', e);
-        });
+        // Audio is already configured for iOS in ResourceManager
     }
     
     /**
@@ -239,6 +241,40 @@ export class Game {
             // Fruit is beyond 20% - full opacity, restore original colors
             this.elements.score.style.color = 'var(--col-bg-lighter)';
             this.elements.score.style.textShadow = '3px 3px 0 var(--col-primary), -3px -3px 0 var(--col-primary), -3px 3px 0 var(--col-primary), 3px -3px 0 var(--col-primary)';
+        }
+    }
+    
+    /**
+     * Update menu images from ResourceManager
+     */
+    updateMenuImages() {
+        // Update menu background and button images
+        if (this.menu && this.menu.menuImages) {
+            const bgImage = this.resourceManager.getImage('menuBackground');
+            const btnImage = this.resourceManager.getImage('startButton');
+            
+            if (bgImage) this.menu.menuImages.background = bgImage;
+            if (btnImage) this.menu.menuImages.startButton = btnImage;
+            
+            // Update fruit images for menu
+            this.menu.fruitImages = {};
+            const currentTheme = this.settings.getCurrentTheme();
+            if (currentTheme && currentTheme.balls) {
+                const themeKey = this.settings.settings.theme.balls;
+                currentTheme.balls.items.forEach((item, index) => {
+                    const img = this.resourceManager.getImage(`${themeKey}_${index}`);
+                    if (img) this.menu.fruitImages[index] = img;
+                });
+            }
+        }
+        
+        // Update settings menu images
+        if (this.settingsMenu && this.settingsMenu.menuImages) {
+            const bgImage = this.resourceManager.getImage('menuBackground');
+            const btnImage = this.resourceManager.getImage('startButton');
+            
+            if (bgImage) this.settingsMenu.menuImages.background = bgImage;
+            if (btnImage) this.settingsMenu.menuImages.button = btnImage;
         }
     }
     
@@ -641,9 +677,7 @@ export class Game {
         this.updateExistingFruits();
         
         // Update menu to show new theme
-        if (this.menu) {
-            this.menu.loadImages();
-        }
+        this.updateMenuImages();
     }
     
     /**
@@ -771,8 +805,9 @@ export class Game {
         GAME_CONFIG.ASSETS.sounds.click = soundTheme.click;
         GAME_CONFIG.ASSETS.sounds.pop = soundTheme.pop;
         
-        // Reinitialize sounds with new theme
-        this.initializeSounds();
+        // With ResourceManager, sounds are loaded at startup
+        // Theme changes would require reloading resources
+        // For now, this is a no-op as we only have one sound theme
     }
     
     /**
@@ -828,6 +863,8 @@ export class Game {
         this.playSound('click');
         
         this.state = GAME_STATES.READY;
+        this.eventSystem.emit(GAME_EVENTS.GAME_START);
+        this.eventSystem.emit(GAME_EVENTS.STATE_CHANGE, { from: GAME_STATES.MENU, to: GAME_STATES.READY });
         
         // Remove menu event listeners to prevent conflicts
         this.removeMenuEventListeners();
@@ -1110,7 +1147,10 @@ export class Game {
      * Lose game
      */
     loseGame() {
+        const prevState = this.state;
         this.state = GAME_STATES.LOSE;
+        this.eventSystem.emit(GAME_EVENTS.GAME_OVER, { score: this.gameData.score });
+        this.eventSystem.emit(GAME_EVENTS.STATE_CHANGE, { from: prevState, to: GAME_STATES.LOSE });
         this.elements.end.style.display = 'flex';
         this.physics.runner.enabled = false;
         this.saveHighscore();
