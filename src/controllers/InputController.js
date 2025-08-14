@@ -61,8 +61,55 @@ export class InputController {
             }
         };
         
+        const handleWheel = (event) => {
+            if (this.game.stateMachine.isInState('SETTINGS')) {
+                event.preventDefault();
+                this.game.settingsMenu.handleScroll(event.deltaY * 0.5);
+                
+                // Re-render
+                const canvas = this.game.physics.render.canvas;
+                const ctx = canvas.getContext('2d');
+                this.game.settingsMenu.render(ctx, this.game.gameWidth, this.game.gameHeight);
+            }
+        };
+        
+        const handleTouchStart = (event) => {
+            if (this.game.stateMachine.isInState('SETTINGS') && event.touches.length > 0) {
+                const rect = this.game.physics.render.canvas.getBoundingClientRect();
+                const scaleX = this.game.gameWidth / rect.width;
+                const scaleY = this.game.gameHeight / rect.height;
+                const touch = event.touches[0];
+                const y = (touch.clientY - rect.top) * scaleY;
+                
+                this.game.settingsMenu.handleDragStart(y);
+            }
+        };
+        
+        const handleTouchMove = (event) => {
+            if (this.game.stateMachine.isInState('SETTINGS') && event.touches.length > 0) {
+                event.preventDefault();
+                const rect = this.game.physics.render.canvas.getBoundingClientRect();
+                const scaleX = this.game.gameWidth / rect.width;
+                const scaleY = this.game.gameHeight / rect.height;
+                const touch = event.touches[0];
+                const y = (touch.clientY - rect.top) * scaleY;
+                
+                this.game.settingsMenu.handleDragMove(y);
+                
+                // Re-render
+                const canvas = this.game.physics.render.canvas;
+                const ctx = canvas.getContext('2d');
+                this.game.settingsMenu.render(ctx, this.game.gameWidth, this.game.gameHeight);
+            }
+        };
+        
         const handleTouchEnd = (event) => {
             event.preventDefault();
+            
+            if (this.game.stateMachine.isInState('SETTINGS')) {
+                this.game.settingsMenu.handleDragEnd();
+            }
+            
             if (event.changedTouches.length > 0) {
                 const touch = event.changedTouches[0];
                 const clickEvent = new MouseEvent('click', {
@@ -79,10 +126,16 @@ export class InputController {
         const canvas = this.game.physics.render.canvas;
         if (canvas) {
             canvas.addEventListener('click', handleClick);
+            canvas.addEventListener('wheel', handleWheel, { passive: false });
+            canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
+            canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
             canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
             
             this.menuEventHandlers = {
                 click: handleClick,
+                wheel: handleWheel,
+                touchstart: handleTouchStart,
+                touchmove: handleTouchMove,
                 touchend: handleTouchEnd
             };
         }

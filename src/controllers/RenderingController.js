@@ -41,6 +41,7 @@ export class RenderingController {
                 this.game.menu.render(ctx, this.game.gameWidth, this.game.gameHeight);
                 requestAnimationFrame(renderMenu);
             } else if (this.game.stateMachine.isInState('SETTINGS')) {
+                this.game.settingsMenu.updateScroll();
                 this.game.settingsMenu.render(ctx, this.game.gameWidth, this.game.gameHeight);
                 requestAnimationFrame(renderMenu);
             } else if (this.game.stateMachine.isInState('READY') || this.game.stateMachine.isInState('DROP')) {

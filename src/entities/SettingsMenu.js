@@ -10,6 +10,14 @@ export class SettingsMenu {
         this.currentThemeCategory = null; // balls, background, sounds
         this.clickableElements = [];
         this.renderer = null; // Will be set when render is called
+        
+        // Scroll state
+        this.scrollOffset = 0;
+        this.maxScroll = 0;
+        this.scrollVelocity = 0;
+        this.isDragging = false;
+        this.lastTouchY = 0;
+        this.scrollViewport = null; // Will be set during render
     }
     
     /**
@@ -62,9 +70,63 @@ export class SettingsMenu {
         this.drawButton(ctx, centerX - buttonWidth/2, currentY, buttonWidth, buttonHeight, 'Themes', 'themes');
         currentY += buttonHeight + spacing + (30 * scale);  // Extra spacing before Physics section
         
-        // Physics settings title with outline
+        // Define scrollable viewport with padding - same width as buttons
+        const viewportPadding = 15 * scale;
+        const viewportTop = currentY;
+        const viewportBottom = gameHeight * 0.85 - buttonHeight - spacing;
+        const viewportHeight = viewportBottom - viewportTop;
+        const viewportLeft = centerX - buttonWidth/2; // Same as button positioning
+        const viewportWidth = buttonWidth; // Same width as buttons
+        
+        // Calculate content height
+        const physicsControlsHeight = 4 * 110 * scale + 50 * scale; // 4 settings + title
+        const contentHeight = physicsControlsHeight;
+        
+        // Update scroll boundaries
+        this.maxScroll = Math.max(0, contentHeight - viewportHeight);
+        this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, this.maxScroll));
+        this.scrollViewport = { 
+            top: viewportTop, 
+            bottom: viewportBottom, 
+            height: viewportHeight,
+            left: viewportLeft,
+            width: viewportWidth
+        };
+        
+        // Draw rounded border for scroll area - match button styling
+        const borderRadius = 10 * scale; // Same as button border radius
+        
+        // Add subtle background fill
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.beginPath();
+        ctx.roundRect(viewportLeft - viewportPadding, viewportTop - viewportPadding, 
+                      viewportWidth + 2 * viewportPadding, viewportHeight + 2 * viewportPadding, 
+                      borderRadius);
+        ctx.fill();
+        
+        // Draw border
+        ctx.strokeStyle = '#FF6E00'; // Same as button border color
+        ctx.lineWidth = 3; // Same as button border width
+        ctx.beginPath();
+        ctx.roundRect(viewportLeft - viewportPadding, viewportTop - viewportPadding, 
+                      viewportWidth + 2 * viewportPadding, viewportHeight + 2 * viewportPadding, 
+                      borderRadius);
+        ctx.stroke();
+        
+        // Save context state and set up clipping
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(viewportLeft - viewportPadding + 5, viewportTop - viewportPadding + 5, 
+                      viewportWidth + 2 * viewportPadding - 10, viewportHeight + 2 * viewportPadding - 10, 
+                      borderRadius);
+        ctx.clip();
+        
+        // Translate for scrolling
+        ctx.translate(0, -this.scrollOffset);
+        
+        // Physics settings title with outline (now scrollable)
         this.renderer.drawTextWithOutline('Physics', centerX, currentY + 20 * scale, {
-            font: `700 ${29 * scale}px 'Azeret Mono', monospace`,  // Increased from 24
+            font: `700 ${29 * scale}px 'Azeret Mono', monospace`,
             fillStyle: '#FFFFFF',
             textAlign: 'center',
             textBaseline: 'middle',
@@ -73,10 +135,21 @@ export class SettingsMenu {
         });
         currentY += 50 * scale;
         
-        // Physics controls
+        // Physics controls (now scrollable)
         this.renderPhysicsControls(ctx, centerX, currentY, scale, gameWidth);
         
-        // Back button
+        // Restore context (removes clipping and translation)
+        ctx.restore();
+        
+        // Draw scroll indicator if needed
+        if (this.maxScroll > 0) {
+            this.drawScrollIndicator(ctx, viewportLeft, viewportWidth, viewportTop, viewportHeight);
+            
+            // Draw scroll arrows
+            this.drawScrollArrows(ctx, viewportLeft, viewportWidth, viewportTop, viewportHeight);
+        }
+        
+        // Back button (outside scroll area)
         currentY = gameHeight * 0.85;
         this.drawButton(ctx, centerX - buttonWidth/2, currentY, buttonWidth, buttonHeight, 'Back to Menu', 'back');
     }
@@ -126,15 +199,16 @@ export class SettingsMenu {
                     textBaseline: 'middle'
                 });
                 
-                // Store clickable area
+                // Store clickable area with scroll adjustment
                 this.clickableElements.push({
                     x: x - buttonSize/2,
-                    y: y,
+                    y: y + this.scrollOffset, // Adjust for scroll
                     width: buttonSize,
                     height: buttonSize,
                     action: 'physics',
                     type: type,
-                    value: i
+                    value: i,
+                    scrollable: true // Mark as scrollable
                 });
             }
             
@@ -249,7 +323,19 @@ export class SettingsMenu {
                 buttons: 'Buttons',
                 iceCream: 'Ice Cream'
             },
-            background: { default: 'Default', space: 'Space' },
+            background: { 
+                default: 'Default', 
+                space: 'Space',
+                chalky: 'Chalky',
+                patches: 'Patches',
+                paua: 'Paua',
+                rainbow: 'Rainbow',
+                skelly: 'Skelly',
+                stars: 'Stars',
+                cottonee: 'Cottonee',
+                fishies: 'Fishies',
+                whimsigoth: 'Whimsigoth'
+            },
             sounds: { default: 'Default' }
         };
         
@@ -257,12 +343,135 @@ export class SettingsMenu {
     }
     
     /**
+     * Draw scroll indicator
+     */
+    drawScrollIndicator(ctx, viewportLeft, viewportWidth, viewportTop, viewportHeight) {
+        const scale = this.scalingSystem.getScale();
+        const barWidth = 6 * scale;
+        const barMargin = 8 * scale;
+        const barX = viewportLeft + viewportWidth - barWidth - barMargin;
+        const trackHeight = viewportHeight - 2 * barMargin;
+        const barHeight = Math.max(30 * scale, (viewportHeight / (viewportHeight + this.maxScroll)) * trackHeight);
+        const barY = viewportTop + barMargin + (this.scrollOffset / this.maxScroll) * (trackHeight - barHeight);
+        
+        // Draw scrollbar track with rounded ends
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.beginPath();
+        ctx.roundRect(barX, viewportTop + barMargin, barWidth, trackHeight, barWidth / 2);
+        ctx.fill();
+        
+        // Draw scrollbar thumb with rounded ends
+        ctx.fillStyle = 'rgba(255, 136, 0, 0.8)'; // Orange to match theme
+        ctx.beginPath();
+        ctx.roundRect(barX, barY, barWidth, barHeight, barWidth / 2);
+        ctx.fill();
+        
+        // Add subtle glow effect
+        ctx.shadowColor = 'rgba(255, 136, 0, 0.5)';
+        ctx.shadowBlur = 5 * scale;
+        ctx.fillStyle = 'rgba(255, 136, 0, 0.9)';
+        ctx.beginPath();
+        ctx.roundRect(barX, barY, barWidth, barHeight, barWidth / 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+    
+    /**
+     * Draw scroll arrows
+     */
+    drawScrollArrows(ctx, viewportLeft, viewportWidth, viewportTop, viewportHeight) {
+        const scale = this.scalingSystem.getScale();
+        const centerX = viewportLeft + viewportWidth / 2;
+        const arrowSize = 15 * scale;
+        const arrowMargin = 5 * scale;
+        
+        // Top arrow (show if can scroll up)
+        if (this.scrollOffset > 0) {
+            const opacity = Math.min(1, this.scrollOffset / (50 * scale));
+            ctx.fillStyle = `rgba(255, 136, 0, ${opacity * 0.8})`;
+            ctx.beginPath();
+            ctx.moveTo(centerX, viewportTop + arrowMargin);
+            ctx.lineTo(centerX - arrowSize, viewportTop + arrowMargin + arrowSize);
+            ctx.lineTo(centerX + arrowSize, viewportTop + arrowMargin + arrowSize);
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        // Bottom arrow (show if can scroll down)
+        if (this.scrollOffset < this.maxScroll) {
+            const opacity = Math.min(1, (this.maxScroll - this.scrollOffset) / (50 * scale));
+            ctx.fillStyle = `rgba(255, 136, 0, ${opacity * 0.8})`;
+            ctx.beginPath();
+            ctx.moveTo(centerX, viewportTop + viewportHeight - arrowMargin);
+            ctx.lineTo(centerX - arrowSize, viewportTop + viewportHeight - arrowMargin - arrowSize);
+            ctx.lineTo(centerX + arrowSize, viewportTop + viewportHeight - arrowMargin - arrowSize);
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+    
+    /**
+     * Handle scroll events
+     */
+    handleScroll(deltaY) {
+        if (this.maxScroll <= 0) return;
+        
+        this.scrollOffset += deltaY;
+        this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, this.maxScroll));
+    }
+    
+    /**
+     * Handle touch/mouse drag for scrolling
+     */
+    handleDragStart(y) {
+        if (!this.scrollViewport) return;
+        if (y >= this.scrollViewport.top && y <= this.scrollViewport.bottom) {
+            this.isDragging = true;
+            this.lastTouchY = y;
+            this.scrollVelocity = 0;
+        }
+    }
+    
+    handleDragMove(y) {
+        if (!this.isDragging) return;
+        
+        const deltaY = this.lastTouchY - y;
+        this.handleScroll(deltaY);
+        this.scrollVelocity = deltaY;
+        this.lastTouchY = y;
+    }
+    
+    handleDragEnd() {
+        this.isDragging = false;
+    }
+    
+    /**
+     * Update scroll physics (for momentum)
+     */
+    updateScroll() {
+        if (Math.abs(this.scrollVelocity) > 0.1 && !this.isDragging) {
+            this.handleScroll(this.scrollVelocity);
+            this.scrollVelocity *= 0.9; // Friction
+        }
+    }
+    
+    /**
      * Handle click events
      */
     handleClick(x, y) {
         for (const element of this.clickableElements) {
+            // Adjust y coordinate for scrollable elements
+            const elementY = element.scrollable ? element.y - this.scrollOffset : element.y;
+            
             if (x >= element.x && x <= element.x + element.width &&
-                y >= element.y && y <= element.y + element.height) {
+                y >= elementY && y <= elementY + element.height) {
+                
+                // Check if click is within viewport for scrollable elements
+                if (element.scrollable && this.scrollViewport) {
+                    if (y < this.scrollViewport.top || y > this.scrollViewport.bottom) {
+                        continue; // Skip if outside viewport
+                    }
+                }
                 
                 return this.processAction(element);
             }
@@ -323,5 +532,8 @@ export class SettingsMenu {
     resetView() {
         this.currentView = 'main';
         this.currentThemeCategory = null;
+        this.scrollOffset = 0;
+        this.scrollVelocity = 0;
+        this.isDragging = false;
     }
 }
