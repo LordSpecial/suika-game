@@ -241,7 +241,13 @@ export class SettingsMenu {
      */
     getThemeDisplayName(category, value) {
         const mapping = {
-            balls: { realFruits: 'Real Fruits', cartoonFruits: 'Cartoon Fruits', planets: 'Planets' },
+            balls: { 
+                realFruits: 'Real Fruits', 
+                cartoonFruits: 'Cartoon Fruits', 
+                planets: 'Planets',
+                buttons: 'Buttons',
+                iceCream: 'Ice Cream'
+            },
             background: { default: 'Default', space: 'Space' },
             sounds: { default: 'Default' }
         };
@@ -296,7 +302,7 @@ export class SettingsMenu {
      */
     cycleThemeOption(category) {
         const options = {
-            balls: ['realFruits', 'cartoonFruits', 'planets'],
+            balls: ['realFruits', 'cartoonFruits', 'planets', 'buttons', 'iceCream'],
             background: ['default', 'space', 'chalky', 'patches', 'paua', 'rainbow', 'skelly', 'stars', 'cottonee', 'fishies', 'whimsigoth'],
             sounds: ['default']
         };
