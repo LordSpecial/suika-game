@@ -21,8 +21,8 @@ export class LoseState extends GameState {
             this.game.physics.runner.enabled = false;
         }
         
-        // Save highscore
-        this.game.saveHighscore();
+        // Check and save highscore if it's a new record
+        this.game.showHighscore();
         
         // End the game in dataStore
         this.game.dataStore.endGame();

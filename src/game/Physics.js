@@ -99,6 +99,15 @@ export class Physics {
     }
     
     /**
+     * Update background image
+     */
+    updateBackground(backgroundPath) {
+        if (this.render) {
+            this.render.options.background = backgroundPath;
+        }
+    }
+    
+    /**
      * Create game walls
      */
     createWalls(gameWidth, gameHeight) {

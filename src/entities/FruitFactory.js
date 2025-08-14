@@ -113,7 +113,7 @@ export class FruitFactory {
         
         // Add some upward velocity for juice effect
         if (mergedFruit.velocity) {
-            mergedFruit.velocity.y = -2;
+            mergedFruit.velocity.y = 0;
         }
         
         return mergedFruit;
