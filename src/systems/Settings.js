@@ -19,7 +19,6 @@ export class Settings {
         };
         
         this.loadSettings();
-        console.log('🎮 Default physics settings on initialization:', this.settings.physics);
     }
     
     /**

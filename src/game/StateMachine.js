@@ -17,9 +17,16 @@ export class StateMachine {
             this.registerState(state);
         });
         
-        // Set initial state
-        if (initialState && this.states.has(initialState)) {
-            this.transition(initialState);
+        // Store initial state but don't transition yet
+        this.initialState = initialState;
+    }
+    
+    /**
+     * Start the state machine by transitioning to initial state
+     */
+    start() {
+        if (this.initialState && this.states.has(this.initialState)) {
+            this.transition(this.initialState);
         }
     }
     

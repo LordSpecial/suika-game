@@ -93,8 +93,11 @@ export class ReadyState extends GameState {
         // Create first preview ball
         this.createPreviewBall();
         
-        // Setup game interaction for dropping fruits
-        this.game.setupGameInteraction();
+        // Delay game interaction setup to avoid processing the start button click
+        setTimeout(() => {
+            // Setup game interaction for dropping fruits
+            this.game.setupGameInteraction();
+        }, 100);
         
         // Emit game start event
         this.emit(GAME_EVENTS.GAME_START);

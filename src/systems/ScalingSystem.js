@@ -19,8 +19,6 @@ export class ScalingSystem {
         // Wait, the min aspect ratio should be width/height of base game (640/960 = 0.667)
         const minWidthHeightRatio = 640 / 960; // 0.667 - minimum game width to height ratio
         
-        console.log('ScalingSystem - Screen aspect ratio:', screenAspectRatio.toFixed(3)); // Debug log
-        console.log('ScalingSystem - Min width/height ratio:', minWidthHeightRatio.toFixed(3)); // Debug log
         
         // ALWAYS use full screen height
         gameHeight = screenHeight;

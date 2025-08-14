@@ -39,14 +39,8 @@ export class Game {
         // Initialize fruit factory
         this.fruitFactory = new FruitFactory(this.physics, this.scalingSystem, this.resourceManager, this.eventSystem);
         
-        // Initialize state machine
-        this.stateMachine = new StateMachine(this.eventSystem, [
-            new MenuState(this),
-            new ReadyState(this),
-            new DropState(this),
-            new LoseState(this),
-            new SettingsState(this)
-        ], 'MENU');
+        // Initialize state machine (but don't transition yet)
+        this.stateMachine = null;
         
         this.gameWidth = GAME_CONFIG.BASE_DIMENSIONS.width;
         this.gameHeight = GAME_CONFIG.BASE_DIMENSIONS.height;
@@ -108,8 +102,20 @@ export class Game {
         // Apply initial theme settings now that engine is initialized
         this.applyThemeChanges();
         
+        // Initialize state machine now that physics is ready
+        this.stateMachine = new StateMachine(this.eventSystem, [
+            new MenuState(this),
+            new ReadyState(this),
+            new DropState(this),
+            new LoseState(this),
+            new SettingsState(this)
+        ], 'MENU');
+        
         // Start game update loop for frame-based timing
         this.startGameUpdateLoop();
+        
+        // Start the state machine after everything is initialized
+        this.stateMachine.start();
         
         // Load highscore into data store
         this.loadHighscore();
@@ -122,12 +128,6 @@ export class Game {
         
         // Subscribe to data changes
         this.setupDataSubscriptions();
-        
-        // Start menu rendering first to ensure button bounds are calculated
-        this.startMenuRendering();
-        
-        // Then setup menu interaction
-        this.setupMenuInteraction();
         
         return this;
     }
