@@ -41,6 +41,7 @@ export class RenderingController {
                 this.game.menu.render(ctx, this.game.gameWidth, this.game.gameHeight);
                 requestAnimationFrame(renderMenu);
             } else if (this.game.stateMachine.isInState('SETTINGS')) {
+                this.game.settingsMenu.updateScroll();
                 this.game.settingsMenu.render(ctx, this.game.gameWidth, this.game.gameHeight);
                 requestAnimationFrame(renderMenu);
             } else if (this.game.stateMachine.isInState('READY') || this.game.stateMachine.isInState('DROP')) {
@@ -136,17 +137,17 @@ export class RenderingController {
     updateScoreOpacity(fruitX) {
         if (!this.game.elements.score) return;
         
-        const tenPercent = this.game.gameWidth * 0.1;
-        const twentyPercent = this.game.gameWidth * 0.2;
+        const thirtyPercent = this.game.gameWidth * 0.3;
+        const fortyPercent = this.game.gameWidth * 0.4;
         
-        if (fruitX <= tenPercent) {
-            // Fruit is at 10% or less - minimum opacity of 5%
+        if (fruitX <= thirtyPercent) {
+            // Fruit is at 30% or less - minimum opacity of 5%
             this.game.elements.score.style.color = 'rgba(255, 238, 219, 0.05)'; // --col-bg-lighter with 5% opacity
             this.game.elements.score.style.textShadow = '3px 3px 0 rgba(255, 83, 0, 0.05), -3px -3px 0 rgba(255, 83, 0, 0.05), -3px 3px 0 rgba(255, 83, 0, 0.05), 3px -3px 0 rgba(255, 83, 0, 0.05)';
-        } else if (fruitX <= twentyPercent) {
-            // Fruit is between 10% and 20% - fade from 5% to 100%
-            const fadeZone = twentyPercent - tenPercent;
-            const positionInFade = fruitX - tenPercent;
+        } else if (fruitX <= fortyPercent) {
+            // Fruit is between 30% and 40% - fade from 5% to 100%
+            const fadeZone = fortyPercent - thirtyPercent;
+            const positionInFade = fruitX - thirtyPercent;
             const fadeRatio = positionInFade / fadeZone;
             
             // Linear interpolation from 0.05 (5%) to 1.0 (100%)
@@ -154,7 +155,7 @@ export class RenderingController {
             this.game.elements.score.style.color = `rgba(255, 238, 219, ${opacity})`;
             this.game.elements.score.style.textShadow = `3px 3px 0 rgba(255, 83, 0, ${opacity}), -3px -3px 0 rgba(255, 83, 0, ${opacity}), -3px 3px 0 rgba(255, 83, 0, ${opacity}), 3px -3px 0 rgba(255, 83, 0, ${opacity})`;
         } else {
-            // Fruit is beyond 20% - full opacity, restore original colors
+            // Fruit is beyond 40% - full opacity, restore original colors
             this.game.elements.score.style.color = 'var(--col-bg-lighter)';
             this.game.elements.score.style.textShadow = '3px 3px 0 var(--col-primary), -3px -3px 0 var(--col-primary), -3px 3px 0 var(--col-primary), 3px -3px 0 var(--col-primary)';
         }
