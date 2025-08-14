@@ -10060,7 +10060,7 @@ var Mouse = __webpack_require__(14);
             cssBackground = 'url(' + background + ')';
 
         render.canvas.style.background = cssBackground;
-        render.canvas.style.backgroundSize = "contain";
+        render.canvas.style.backgroundSize = "cover";
         render.currentBackground = background;
     };
 

@@ -151,6 +151,51 @@ export const GAME_CONFIG = {
                 name: 'Space',
                 background: './assets/img/backgrounds/BG3.png',
                 menuBackground: './assets/img/bg-menu.png'
+            },
+            chalky: {
+                name: 'Chalky',
+                background: './assets/img/backgrounds/Chalky.jpg',
+                menuBackground: './assets/img/bg-menu.png'
+            },
+            patches: {
+                name: 'Patches',
+                background: './assets/img/backgrounds/Patches.jpg',
+                menuBackground: './assets/img/bg-menu.png'
+            },
+            paua: {
+                name: 'Paua',
+                background: './assets/img/backgrounds/Paua.jpg',
+                menuBackground: './assets/img/bg-menu.png'
+            },
+            rainbow: {
+                name: 'Rainbow',
+                background: './assets/img/backgrounds/Rainbow.jpg',
+                menuBackground: './assets/img/bg-menu.png'
+            },
+            skelly: {
+                name: 'Skelly',
+                background: './assets/img/backgrounds/Skelly.jpg',
+                menuBackground: './assets/img/bg-menu.png'
+            },
+            stars: {
+                name: 'Stars',
+                background: './assets/img/backgrounds/Stars.jpg',
+                menuBackground: './assets/img/bg-menu.png'
+            },
+            cottonee: {
+                name: 'Cottonee',
+                background: './assets/img/backgrounds/cottonee.jpg',
+                menuBackground: './assets/img/bg-menu.png'
+            },
+            fishies: {
+                name: 'Fishies',
+                background: './assets/img/backgrounds/fishies.jpg',
+                menuBackground: './assets/img/bg-menu.png'
+            },
+            whimsigoth: {
+                name: 'Whimsigoth',
+                background: './assets/img/backgrounds/whimsigoth.jpg',
+                menuBackground: './assets/img/bg-menu.png'
             }
         },
         SOUNDS: {

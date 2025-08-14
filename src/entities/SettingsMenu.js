@@ -287,7 +287,7 @@ export class SettingsMenu {
     cycleThemeOption(category) {
         const options = {
             balls: ['realFruits', 'cartoonFruits', 'planets'],
-            background: ['default', 'space'],
+            background: ['default', 'space', 'chalky', 'patches', 'paua', 'rainbow', 'skelly', 'stars', 'cottonee', 'fishies', 'whimsigoth'],
             sounds: ['default']
         };
         
