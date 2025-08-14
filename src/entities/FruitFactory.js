@@ -7,11 +7,12 @@ import { GAME_CONFIG } from '../utils/Config.js';
  * and manages fruit-related effects.
  */
 export class FruitFactory {
-    constructor(physics, scalingSystem, resourceManager, eventSystem) {
+    constructor(physics, scalingSystem, resourceManager, eventSystem, settings) {
         this.physics = physics;
         this.scalingSystem = scalingSystem;
         this.resourceManager = resourceManager;
         this.eventSystem = eventSystem;
+        this.settings = settings;
         
         // Cache scaled fruits for performance
         this.scaledFruits = null;
@@ -27,7 +28,16 @@ export class FruitFactory {
      * Update cached scaled fruits
      */
     updateScaledFruits() {
-        this.scaledFruits = this.scalingSystem.scaleFruits(GAME_CONFIG.FRUITS);
+        // Get current theme from settings
+        const currentBallTheme = this.settings.settings.theme.balls;
+        const themeData = GAME_CONFIG.THEMES.BALLS[currentBallTheme];
+        
+        if (themeData && themeData.items) {
+            this.scaledFruits = this.scalingSystem.scaleFruits(themeData.items);
+        } else {
+            // Fallback to default
+            this.scaledFruits = this.scalingSystem.scaleFruits(GAME_CONFIG.FRUITS);
+        }
     }
     
     /**

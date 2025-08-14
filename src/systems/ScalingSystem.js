@@ -75,33 +75,21 @@ export class ScalingSystem {
     /**
      * Scale fruit sizes proportionally
      */
-    scaleFruits(fruits) {
-        if (!this.baseFruitSizes) {
+    scaleFruits(fruits, forceReset = false) {
+        // Reset cache if forced or if the fruit count has changed (indicating theme change)
+        if (!this.baseFruitSizes || forceReset || this.baseFruitSizes.length !== fruits.length) {
             this.baseFruitSizes = fruits.map(fruit => ({ ...fruit }));
         }
         
-        return this.baseFruitSizes.map((baseFruit, index) => ({
-            ...baseFruit,
-            radius: baseFruit.radius * this.gameScale,
-            scale: (baseFruit.radius * this.gameScale * 2) / baseFruit.imgSize,
+        // Always use the provided fruits for image data, but preserve cached sizes
+        return fruits.map((fruit, index) => ({
+            ...fruit,
+            radius: fruit.radius * this.gameScale,
+            scale: (fruit.radius * this.gameScale * 2) / fruit.imgSize,
             sizeIndex: index
         }));
     }
     
-    /**
-     * Update cached fruit theme images whilst preserving physics properties
-     */
-    updateThemeImages(newFruits) {
-        if (!this.baseFruitSizes || !newFruits) return;
-        
-        // Update only image properties in the cached base fruit sizes
-        newFruits.forEach((newFruit, index) => {
-            if (this.baseFruitSizes[index]) {
-                this.baseFruitSizes[index].img = newFruit.img;
-                this.baseFruitSizes[index].imgSize = newFruit.imgSize;
-            }
-        });
-    }
     
     /**
      * Apply CSS scaling to UI elements

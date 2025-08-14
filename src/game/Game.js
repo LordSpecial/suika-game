@@ -47,7 +47,7 @@ export class Game {
         this.scoringSystem = new ScoringSystem(this.eventSystem, this.dataStore);
         
         // Initialize fruit factory
-        this.fruitFactory = new FruitFactory(this.physics, this.scalingSystem, this.resourceManager, this.eventSystem);
+        this.fruitFactory = new FruitFactory(this.physics, this.scalingSystem, this.resourceManager, this.eventSystem, this.settings);
         
         // Initialize controllers
         this.renderingController = new RenderingController(this);
