@@ -1,10 +1,11 @@
 import { GAME_CONFIG } from '../utils/Config.js';
 
 export class ScalingSystem {
-    constructor() {
+    constructor(settings) {
         this.gameScale = 1;
         this.scaledConstants = {};
         this.baseFruitSizes = null;
+        this.settings = settings;
     }
     
     /**
@@ -19,8 +20,6 @@ export class ScalingSystem {
         // Wait, the min aspect ratio should be width/height of base game (640/960 = 0.667)
         const minWidthHeightRatio = 640 / 960; // 0.667 - minimum game width to height ratio
         
-        console.log('ScalingSystem - Screen aspect ratio:', screenAspectRatio.toFixed(3)); // Debug log
-        console.log('ScalingSystem - Min width/height ratio:', minWidthHeightRatio.toFixed(3)); // Debug log
         
         // ALWAYS use full screen height
         gameHeight = screenHeight;
@@ -77,32 +76,24 @@ export class ScalingSystem {
     /**
      * Scale fruit sizes proportionally
      */
-    scaleFruits(fruits) {
-        if (!this.baseFruitSizes) {
+    scaleFruits(fruits, forceReset = false) {
+        // Reset cache if forced or if the fruit count has changed (indicating theme change)
+        if (!this.baseFruitSizes || forceReset || this.baseFruitSizes.length !== fruits.length) {
             this.baseFruitSizes = fruits.map(fruit => ({ ...fruit }));
         }
         
-        return this.baseFruitSizes.map((baseFruit, index) => ({
-            ...baseFruit,
-            radius: baseFruit.radius * this.gameScale,
-            scale: (baseFruit.radius * this.gameScale * 2) / baseFruit.imgSize
+        // Get ball size multiplier from settings
+        const ballSizeMultiplier = this.settings ? this.settings.getBallSizeMultiplier() : 1.0;
+        
+        // Always use the provided fruits for image data, but preserve cached sizes
+        return fruits.map((fruit, index) => ({
+            ...fruit,
+            radius: fruit.radius * this.gameScale * ballSizeMultiplier,
+            scale: (fruit.radius * this.gameScale * ballSizeMultiplier * 2) / fruit.imgSize,
+            sizeIndex: index
         }));
     }
     
-    /**
-     * Update cached fruit theme images whilst preserving physics properties
-     */
-    updateThemeImages(newFruits) {
-        if (!this.baseFruitSizes || !newFruits) return;
-        
-        // Update only image properties in the cached base fruit sizes
-        newFruits.forEach((newFruit, index) => {
-            if (this.baseFruitSizes[index]) {
-                this.baseFruitSizes[index].img = newFruit.img;
-                this.baseFruitSizes[index].imgSize = newFruit.imgSize;
-            }
-        });
-    }
     
     /**
      * Apply CSS scaling to UI elements

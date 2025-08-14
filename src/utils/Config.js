@@ -22,11 +22,11 @@ export const GAME_CONFIG = {
     UI: {
         statusBarHeight: 48,
         fontSize: {
-            score: 84,
-            endTitle: 48,
-            statusValue: 24,
-            statusLabel: 16,
-            endLink: 24
+            score: 101,      // Increased from 84 (20% increase)
+            endTitle: 58,    // Increased from 48 (20% increase)
+            statusValue: 29, // Increased from 24 (20% increase)
+            statusLabel: 19, // Increased from 16 (20% increase)
+            endLink: 29      // Increased from 24 (20% increase)
         },
         spacing: {
             scorePadding: 16,
@@ -138,6 +138,38 @@ export const GAME_CONFIG = {
                     { radius: 128, scoreValue: 45, img: './assets/img/planets/9_saturn.png',   imgSize: 512 },
                     { radius: 160, scoreValue: 55, img: './assets/img/planets/10_jupiter.png', imgSize: 512 },
                     { radius: 192, scoreValue: 66, img: './assets/img/planets/11_sun.png',     imgSize: 512 }
+                ]
+            },
+            buttons: {
+                name: 'Buttons',
+                items: [
+                    { radius: 24,  scoreValue: 1,  img: './assets/img/buttons/1_smiley.png',              imgSize: 512 },
+                    { radius: 32,  scoreValue: 3,  img: './assets/img/buttons/2_garfield.png',            imgSize: 512 },
+                    { radius: 40,  scoreValue: 6,  img: './assets/img/buttons/3_dog.png',                 imgSize: 512 },
+                    { radius: 56,  scoreValue: 10, img: './assets/img/buttons/4_woodstock.png',           imgSize: 512 },
+                    { radius: 64,  scoreValue: 15, img: './assets/img/buttons/5_treat.png',               imgSize: 512 },
+                    { radius: 72,  scoreValue: 21, img: './assets/img/buttons/6_cat.png',                 imgSize: 512 },
+                    { radius: 84,  scoreValue: 28, img: './assets/img/buttons/7_raccoon.png',             imgSize: 512 },
+                    { radius: 96,  scoreValue: 36, img: './assets/img/buttons/8_prickly_pear_cactus.png', imgSize: 512 },
+                    { radius: 128, scoreValue: 45, img: './assets/img/buttons/9_dragon.png',              imgSize: 512 },
+                    { radius: 160, scoreValue: 55, img: './assets/img/buttons/10_bear_arms.png',          imgSize: 512 },
+                    { radius: 192, scoreValue: 66, img: './assets/img/buttons/11_peace.png',              imgSize: 512 }
+                ]
+            },
+            iceCream: {
+                name: 'Ice Cream',
+                items: [
+                    { radius: 24,  scoreValue: 1,  img: './assets/img/iceCream/1_vanilla.png',             imgSize: 512 },
+                    { radius: 32,  scoreValue: 3,  img: './assets/img/iceCream/2_chocolate.png',           imgSize: 512 },
+                    { radius: 40,  scoreValue: 6,  img: './assets/img/iceCream/3_cookies_and_cream.png',   imgSize: 512 },
+                    { radius: 56,  scoreValue: 10, img: './assets/img/iceCream/4_coffee.png',              imgSize: 512 },
+                    { radius: 64,  scoreValue: 15, img: './assets/img/iceCream/5_orange_choc_chip.png',    imgSize: 512 },
+                    { radius: 72,  scoreValue: 21, img: './assets/img/iceCream/6_strawbanana.png',         imgSize: 512 },
+                    { radius: 84,  scoreValue: 28, img: './assets/img/iceCream/7_mint_choc_chip.png',      imgSize: 512 },
+                    { radius: 96,  scoreValue: 36, img: './assets/img/iceCream/8_strawberry_rocky_road.png', imgSize: 512 },
+                    { radius: 128, scoreValue: 45, img: './assets/img/iceCream/9_matcha.png',              imgSize: 512 },
+                    { radius: 160, scoreValue: 55, img: './assets/img/iceCream/10_hokey_pokey.png',        imgSize: 512 },
+                    { radius: 192, scoreValue: 66, img: './assets/img/iceCream/11_gold_rush.png',          imgSize: 512 }
                 ]
             }
         },

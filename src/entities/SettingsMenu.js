@@ -1,4 +1,5 @@
 import { GAME_CONFIG } from '../utils/Config.js';
+import { Renderer } from '../rendering/Renderer.js';
 
 export class SettingsMenu {
     constructor(scalingSystem, settings) {
@@ -8,40 +9,25 @@ export class SettingsMenu {
         this.currentView = 'main'; // main, themes
         this.currentThemeCategory = null; // balls, background, sounds
         this.clickableElements = [];
-        
-        this.loadImages();
-    }
-    
-    /**
-     * Load menu images
-     */
-    loadImages() {
-        // Load basic UI elements
-        this.menuImages.background = new Image();
-        this.menuImages.background.src = GAME_CONFIG.ASSETS.images.menuBackground;
-        
-        this.menuImages.button = new Image();
-        this.menuImages.button.src = GAME_CONFIG.ASSETS.images.startButton;
+        this.renderer = null; // Will be set when render is called
     }
     
     /**
      * Render the settings menu
      */
     render(ctx, gameWidth, gameHeight) {
+        // Create renderer if needed
+        if (!this.renderer) {
+            this.renderer = new Renderer(ctx.canvas, this.scalingSystem);
+        }
+        
         const scale = this.scalingSystem.getScale();
         this.clickableElements = [];
         
         // Clear canvas
-        ctx.clearRect(0, 0, gameWidth, gameHeight);
+        this.renderer.clear();
         
-        // Draw background
-        const bgSize = GAME_CONFIG.MENU.backgroundSize * scale;
-        const bgX = gameWidth / 2 - bgSize / 2;
-        const bgY = gameHeight * 0.1;
-        
-        if (this.menuImages.background.complete) {
-            ctx.drawImage(this.menuImages.background, bgX, bgY, bgSize, bgSize);
-        }
+        // No background image in settings
         
         if (this.currentView === 'main') {
             this.renderMainSettings(ctx, gameWidth, gameHeight, scale);
@@ -55,30 +41,40 @@ export class SettingsMenu {
      */
     renderMainSettings(ctx, gameWidth, gameHeight, scale) {
         const centerX = gameWidth / 2;
-        let currentY = gameHeight * 0.35;
+        let currentY = gameHeight * 0.2;
         const buttonHeight = 64 * scale;
-        const buttonWidth = 400 * scale;
+        const buttonWidth = Math.min(400 * scale, gameWidth * 0.8);  // Responsive width
         const spacing = 20 * scale;
         
-        // Title
-        ctx.fillStyle = '#2C1810';
-        ctx.font = `900 ${32 * scale}px 'Azeret Mono', monospace`;
-        ctx.textAlign = 'center';
-        ctx.fillText('Settings', centerX, currentY);
+        // Title with outline
+        this.renderer.drawTextWithOutline('Settings', centerX, currentY, {
+            font: `900 ${38 * scale}px 'Azeret Mono', monospace`,  // Increased from 32
+            fillStyle: '#FFFFFF',
+            textAlign: 'center',
+            textBaseline: 'middle',
+            outlineColor: '#000000',
+            outlineWidth: 3
+        });
         
         currentY += 60 * scale;
         
         // Themes button
         this.drawButton(ctx, centerX - buttonWidth/2, currentY, buttonWidth, buttonHeight, 'Themes', 'themes');
-        currentY += buttonHeight + spacing;
+        currentY += buttonHeight + spacing + (30 * scale);  // Extra spacing before Physics section
         
-        // Physics settings title
-        ctx.font = `700 ${24 * scale}px 'Azeret Mono', monospace`;
-        ctx.fillText('Physics', centerX, currentY + 20 * scale);
+        // Physics settings title with outline
+        this.renderer.drawTextWithOutline('Physics', centerX, currentY + 20 * scale, {
+            font: `700 ${29 * scale}px 'Azeret Mono', monospace`,  // Increased from 24
+            fillStyle: '#FFFFFF',
+            textAlign: 'center',
+            textBaseline: 'middle',
+            outlineColor: '#000000',
+            outlineWidth: 2
+        });
         currentY += 50 * scale;
         
         // Physics controls
-        this.renderPhysicsControls(ctx, centerX, currentY, scale);
+        this.renderPhysicsControls(ctx, centerX, currentY, scale, gameWidth);
         
         // Back button
         currentY = gameHeight * 0.85;
@@ -88,21 +84,26 @@ export class SettingsMenu {
     /**
      * Render physics controls
      */
-    renderPhysicsControls(ctx, centerX, startY, scale) {
+    renderPhysicsControls(ctx, centerX, startY, scale, gameWidth) {
         const physics = this.settings.settings.physics;
         const presetNames = this.settings.getPhysicsPresetNames();
-        const controlSpacing = 80 * scale;
-        const buttonSize = 40 * scale;
-        const buttonSpacing = 60 * scale;
+        const controlSpacing = 110 * scale;  // Extra vertical spacing
+        const buttonSize = 60 * scale;  // Increased from 40
+        const buttonSpacing = Math.min(90 * scale, gameWidth / 5);  // Responsive spacing, increased
         
         let currentY = startY;
         
-        ['bounciness', 'gravity', 'friction'].forEach(type => {
-            // Label
-            ctx.fillStyle = '#2C1810';
-            ctx.font = `700 ${18 * scale}px 'Azeret Mono', monospace`;
-            ctx.textAlign = 'center';
-            ctx.fillText(type.charAt(0).toUpperCase() + type.slice(1), centerX, currentY);
+        ['bounciness', 'gravity', 'friction', 'ballSize'].forEach(type => {
+            // Label with outline
+            const label = type === 'ballSize' ? 'Ball Size' : type.charAt(0).toUpperCase() + type.slice(1);
+            this.renderer.drawTextWithOutline(label, centerX, currentY, {
+                font: `700 ${22 * scale}px 'Azeret Mono', monospace`,  // Increased from 18
+                fillStyle: '#FFFFFF',
+                textAlign: 'center',
+                textBaseline: 'middle',
+                outlineColor: '#000000',
+                outlineWidth: 2
+            });
             
             // Three option buttons
             for (let i = 0; i < 3; i++) {
@@ -110,20 +111,20 @@ export class SettingsMenu {
                 const y = currentY + 15 * scale;
                 const isSelected = physics[type] === i;
                 
-                // Button background
-                ctx.fillStyle = isSelected ? '#4CAF50' : '#E0E0E0';
-                ctx.fillRect(x - buttonSize/2, y, buttonSize, buttonSize);
+                // Button background with rounded corners
+                const smallRadius = 5 * scale;
+                this.renderer.fillRoundRect(x - buttonSize/2, y, buttonSize, buttonSize, smallRadius, isSelected ? '#FF8800' : '#E0E0E0');
                 
-                // Button border
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(x - buttonSize/2, y, buttonSize, buttonSize);
+                // Button border with rounded corners
+                this.renderer.strokeRoundRect(x - buttonSize/2, y, buttonSize, buttonSize, smallRadius, isSelected ? '#FF6E00' : '#CCC', 2);
                 
                 // Button text
-                ctx.fillStyle = isSelected ? '#FFF' : '#333';
-                ctx.font = `700 ${12 * scale}px 'Azeret Mono', monospace`;
-                ctx.textAlign = 'center';
-                ctx.fillText(presetNames[type][i], x, y + buttonSize/2 + 4 * scale);
+                this.renderer.drawText(presetNames[type][i], x, y + buttonSize/2, {
+                    font: `700 ${14 * scale}px 'Azeret Mono', monospace`,  // Increased from 12
+                    fillStyle: isSelected ? '#FFFFFF' : '#333',
+                    textAlign: 'center',
+                    textBaseline: 'middle'
+                });
                 
                 // Store clickable area
                 this.clickableElements.push({
@@ -138,6 +139,11 @@ export class SettingsMenu {
             }
             
             currentY += controlSpacing;
+            
+            // Add extra spacing between different physics settings
+            if (type !== 'friction') {
+                currentY += 20 * scale;
+            }
         });
     }
     
@@ -146,16 +152,20 @@ export class SettingsMenu {
      */
     renderThemeSettings(ctx, gameWidth, gameHeight, scale) {
         const centerX = gameWidth / 2;
-        let currentY = gameHeight * 0.3;
+        let currentY = gameHeight * 0.15;
         const buttonHeight = 64 * scale;
-        const buttonWidth = 300 * scale;
+        const buttonWidth = gameWidth * 0.8;  // Use 80% of window width
         const spacing = 20 * scale;
         
-        // Title
-        ctx.fillStyle = '#2C1810';
-        ctx.font = `900 ${32 * scale}px 'Azeret Mono', monospace`;
-        ctx.textAlign = 'center';
-        ctx.fillText('Themes', centerX, currentY);
+        // Title with outline
+        this.renderer.drawTextWithOutline('Themes', centerX, currentY, {
+            font: `900 ${38 * scale}px 'Azeret Mono', monospace`,  // Increased from 32
+            fillStyle: '#FFFFFF',
+            textAlign: 'center',
+            textBaseline: 'middle',
+            outlineColor: '#000000',
+            outlineWidth: 3
+        });
         
         currentY += 60 * scale;
         
@@ -200,20 +210,21 @@ export class SettingsMenu {
      * Draw a clickable button
      */
     drawButton(ctx, x, y, width, height, text, action, data = null) {
-        // Button background
-        ctx.fillStyle = '#F5F5DC';
-        ctx.fillRect(x, y, width, height);
+        const borderRadius = 10 * this.scalingSystem.getScale();
         
-        // Button border
-        ctx.strokeStyle = '#8B4513';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(x, y, width, height);
+        // Button background with rounded corners
+        this.renderer.fillRoundRect(x, y, width, height, borderRadius, '#FF8800');
+        
+        // Button border with rounded corners
+        this.renderer.strokeRoundRect(x, y, width, height, borderRadius, '#FF6E00', 3);
         
         // Button text
-        ctx.fillStyle = '#2C1810';
-        ctx.font = `700 ${18 * this.scalingSystem.getScale()}px 'Azeret Mono', monospace`;
-        ctx.textAlign = 'center';
-        ctx.fillText(text, x + width/2, y + height/2 + 6);
+        this.renderer.drawText(text, x + width/2, y + height/2, {
+            font: `700 ${22 * this.scalingSystem.getScale()}px 'Azeret Mono', monospace`,  // Increased from 18
+            fillStyle: '#FFFFFF',
+            textAlign: 'center',
+            textBaseline: 'middle'
+        });
         
         // Store clickable area
         this.clickableElements.push({
@@ -231,7 +242,13 @@ export class SettingsMenu {
      */
     getThemeDisplayName(category, value) {
         const mapping = {
-            balls: { realFruits: 'Real Fruits', cartoonFruits: 'Cartoon Fruits', planets: 'Planets' },
+            balls: { 
+                realFruits: 'Real Fruits', 
+                cartoonFruits: 'Cartoon Fruits', 
+                planets: 'Planets',
+                buttons: 'Buttons',
+                iceCream: 'Ice Cream'
+            },
             background: { default: 'Default', space: 'Space' },
             sounds: { default: 'Default' }
         };
@@ -286,7 +303,7 @@ export class SettingsMenu {
      */
     cycleThemeOption(category) {
         const options = {
-            balls: ['realFruits', 'cartoonFruits', 'planets'],
+            balls: ['realFruits', 'cartoonFruits', 'planets', 'buttons', 'iceCream'],
             background: ['default', 'space', 'chalky', 'patches', 'paua', 'rainbow', 'skelly', 'stars', 'cottonee', 'fishies', 'whimsigoth'],
             sounds: ['default']
         };

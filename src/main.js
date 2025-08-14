@@ -6,9 +6,9 @@ window.Matter = Matter;
 // Initialize the game
 let game;
 
-function initGame() {
+async function initGame() {
     game = new Game();
-    game.init();
+    await game.init();
 }
 
 // Resize handler
