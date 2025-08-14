@@ -107,15 +107,17 @@ export class Menu {
         
         // Draw mute button background
         const isMuted = this.settings && this.settings.isMuted();
-        this.renderer.fillRect(muteX, muteY, buttonSize, buttonSize, isMuted ? '#FFAAAA' : '#F5F5DC');
-        this.renderer.strokeRect(muteX, muteY, buttonSize, buttonSize, '#8B4513', 3);
+        const buttonRadius = 10 * scale;
+        this.renderer.fillRoundRect(muteX, muteY, buttonSize, buttonSize, buttonRadius, isMuted ? '#CC6600' : '#FF8800');
+        this.renderer.strokeRoundRect(muteX, muteY, buttonSize, buttonSize, buttonRadius, '#FF6E00', 3);
         
         // Draw mute icon
         const muteIcon = isMuted ? '🔇' : '🔊';
-        this.renderer.drawText(muteIcon, muteX + buttonSize/2, muteY + buttonSize/2 + 8 * scale, {
-            font: `900 ${28 * scale}px 'Azeret Mono', monospace`,
-            fillStyle: '#2C1810',
-            textAlign: 'center'
+        this.renderer.drawText(muteIcon, muteX + buttonSize/2, muteY + buttonSize/2, {
+            font: `900 ${34 * scale}px 'Azeret Mono', monospace`,  // Increased from 28
+            fillStyle: '#FFFFFF',
+            textAlign: 'center',
+            textBaseline: 'middle'
         });
         
         // Settings button (right of mute button)
@@ -131,14 +133,15 @@ export class Menu {
         };
         
         // Draw settings button background
-        this.renderer.fillRect(settingsX, settingsY, buttonSize, buttonSize, '#F5F5DC');
-        this.renderer.strokeRect(settingsX, settingsY, buttonSize, buttonSize, '#8B4513', 3);
+        this.renderer.fillRoundRect(settingsX, settingsY, buttonSize, buttonSize, buttonRadius, '#FF8800');
+        this.renderer.strokeRoundRect(settingsX, settingsY, buttonSize, buttonSize, buttonRadius, '#FF6E00', 3);
         
         // Draw settings icon (gear shape)
-        this.renderer.drawText('⚙', settingsX + buttonSize/2, settingsY + buttonSize/2 + 8 * scale, {
-            font: `900 ${32 * scale}px 'Azeret Mono', monospace`,
-            fillStyle: '#2C1810',
-            textAlign: 'center'
+        this.renderer.drawText('⚙', settingsX + buttonSize/2, settingsY + buttonSize/2, {
+            font: `900 ${38 * scale}px 'Azeret Mono', monospace`,  // Increased from 32
+            fillStyle: '#FFFFFF',
+            textAlign: 'center',
+            textBaseline: 'middle'
         });
     }
     

@@ -421,4 +421,42 @@ export class Renderer {
     clearTextCache() {
         this.textMeasureCache.clear();
     }
+    
+    /**
+     * Fill a rounded rectangle
+     * @param {number} x - X position
+     * @param {number} y - Y position
+     * @param {number} width - Rectangle width
+     * @param {number} height - Rectangle height
+     * @param {number} radius - Corner radius
+     * @param {string} color - Fill color
+     */
+    fillRoundRect(x, y, width, height, radius, color) {
+        this.ctx.save();
+        this.ctx.fillStyle = color;
+        this.ctx.beginPath();
+        this.ctx.roundRect(x, y, width, height, radius);
+        this.ctx.fill();
+        this.ctx.restore();
+    }
+    
+    /**
+     * Stroke a rounded rectangle
+     * @param {number} x - X position
+     * @param {number} y - Y position
+     * @param {number} width - Rectangle width
+     * @param {number} height - Rectangle height
+     * @param {number} radius - Corner radius
+     * @param {string} color - Stroke color
+     * @param {number} lineWidth - Line width
+     */
+    strokeRoundRect(x, y, width, height, radius, color, lineWidth = 1) {
+        this.ctx.save();
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = lineWidth;
+        this.ctx.beginPath();
+        this.ctx.roundRect(x, y, width, height, radius);
+        this.ctx.stroke();
+        this.ctx.restore();
+    }
 }

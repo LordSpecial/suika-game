@@ -22,11 +22,11 @@ export const GAME_CONFIG = {
     UI: {
         statusBarHeight: 48,
         fontSize: {
-            score: 84,
-            endTitle: 48,
-            statusValue: 24,
-            statusLabel: 16,
-            endLink: 24
+            score: 101,      // Increased from 84 (20% increase)
+            endTitle: 58,    // Increased from 48 (20% increase)
+            statusValue: 29, // Increased from 24 (20% increase)
+            statusLabel: 19, // Increased from 16 (20% increase)
+            endLink: 29      // Increased from 24 (20% increase)
         },
         spacing: {
             scorePadding: 16,
