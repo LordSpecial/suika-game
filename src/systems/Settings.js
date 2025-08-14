@@ -11,7 +11,8 @@ export class Settings {
             physics: {
                 bounciness: 1, // 0 = low, 1 = medium, 2 = high
                 gravity: 1,    // 0 = low, 1 = medium, 2 = high
-                friction: 1    // 0 = low, 1 = medium, 2 = high
+                friction: 1,   // 0 = low, 1 = medium, 2 = high
+                ballSize: 1    // 0 = small (0.5x), 1 = medium (1x), 2 = large (1.5x)
             },
             audio: {
                 muted: false // Whether all audio is muted
@@ -29,10 +30,35 @@ export class Settings {
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
-                this.settings = { ...this.settings, ...parsed };
+                // Deep merge to preserve new settings that might not be in saved data
+                this.settings = this.deepMerge(this.settings, parsed);
             } catch (e) {
-                console.warn('Failed to load settings:', e);
+                // Silently fail and use defaults
             }
+        }
+    }
+    
+    /**
+     * Deep merge two objects
+     */
+    deepMerge(target, source) {
+        const output = { ...target };
+        if (isObject(target) && isObject(source)) {
+            Object.keys(source).forEach(key => {
+                if (isObject(source[key])) {
+                    if (!(key in target))
+                        Object.assign(output, { [key]: source[key] });
+                    else
+                        output[key] = this.deepMerge(target[key], source[key]);
+                } else {
+                    Object.assign(output, { [key]: source[key] });
+                }
+            });
+        }
+        return output;
+        
+        function isObject(obj) {
+            return obj && typeof obj === 'object' && !Array.isArray(obj);
         }
     }
     
@@ -84,10 +110,8 @@ export class Settings {
      */
     setPhysics(category, value) {
         if (this.settings.physics[category] !== undefined && value >= 0 && value <= 2) {
-            console.log(`⚙️ Physics setting changed: ${category} from ${this.settings.physics[category]} to ${value}`);
             this.settings.physics[category] = value;
             this.saveSettings();
-            console.log('📊 All physics settings after change:', this.settings.physics);
             return true;
         }
         return false;
@@ -137,7 +161,8 @@ export class Settings {
             physics: {
                 bounciness: 1,
                 gravity: 1,
-                friction: 1
+                friction: 1,
+                ballSize: 1
             },
             audio: {
                 muted: false
@@ -147,13 +172,22 @@ export class Settings {
     }
     
     /**
+     * Get ball size multiplier
+     */
+    getBallSizeMultiplier() {
+        const multipliers = [0.5, 1.0, 1.5];
+        return multipliers[this.settings.physics.ballSize] || 1.0;
+    }
+    
+    /**
      * Get physics preset names for UI
      */
     getPhysicsPresetNames() {
         return {
             bounciness: ['Low', 'Medium', 'High'],
             gravity: ['Low', 'Medium', 'High'],
-            friction: ['Low', 'Medium', 'High']
+            friction: ['Low', 'Medium', 'High'],
+            ballSize: ['Small', 'Medium', 'Large']
         };
     }
     

@@ -177,6 +177,11 @@ export class PhysicsController {
         // Update existing fruits
         this.updateExistingFruits(overrides);
         
+        // Update fruit factory's scaled fruits if ball size changed
+        if (this.game.fruitFactory) {
+            this.game.fruitFactory.updateScaledFruits();
+        }
+        
         // Recreate walls to ensure they're properly positioned
         this.recreateWalls();
     }
@@ -186,6 +191,7 @@ export class PhysicsController {
      */
     updateExistingFruits(physicsOverrides) {
         const bodies = this.game.physics.engine.world.bodies;
+        const ballSizeMultiplier = this.game.settings.getBallSizeMultiplier();
         
         bodies.forEach(body => {
             // Skip static bodies (walls)
@@ -203,6 +209,21 @@ export class PhysicsController {
             }
             if (physicsOverrides.frictionStatic !== undefined) {
                 body.frictionStatic = physicsOverrides.frictionStatic;
+            }
+            
+            // Update size if it's a fruit (has sizeIndex)
+            if (body.sizeIndex !== undefined && this.game.fruitFactory) {
+                const fruitData = this.game.fruitFactory.getFruitData(body.sizeIndex);
+                if (fruitData) {
+                    // Update the body's scale for rendering
+                    Matter.Body.scale(body, fruitData.radius / body.circleRadius, fruitData.radius / body.circleRadius);
+                    
+                    // Update render sprite scale
+                    if (body.render && body.render.sprite) {
+                        body.render.sprite.xScale = fruitData.scale;
+                        body.render.sprite.yScale = fruitData.scale;
+                    }
+                }
             }
         });
     }

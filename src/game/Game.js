@@ -31,8 +31,8 @@ export class Game {
         // Core systems
         this.eventSystem = eventSystem; // Use singleton instance
         this.resourceManager = new ResourceManager(this.eventSystem);
-        this.scalingSystem = new ScalingSystem();
         this.settings = new Settings();
+        this.scalingSystem = new ScalingSystem(this.settings);
         this.physics = new Physics();
         this.menu = new Menu(this.scalingSystem, this.settings);
         this.settingsMenu = new SettingsMenu(this.scalingSystem, this.settings);

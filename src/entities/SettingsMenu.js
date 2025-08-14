@@ -93,9 +93,10 @@ export class SettingsMenu {
         
         let currentY = startY;
         
-        ['bounciness', 'gravity', 'friction'].forEach(type => {
+        ['bounciness', 'gravity', 'friction', 'ballSize'].forEach(type => {
             // Label with outline
-            this.renderer.drawTextWithOutline(type.charAt(0).toUpperCase() + type.slice(1), centerX, currentY, {
+            const label = type === 'ballSize' ? 'Ball Size' : type.charAt(0).toUpperCase() + type.slice(1);
+            this.renderer.drawTextWithOutline(label, centerX, currentY, {
                 font: `700 ${22 * scale}px 'Azeret Mono', monospace`,  // Increased from 18
                 fillStyle: '#FFFFFF',
                 textAlign: 'center',

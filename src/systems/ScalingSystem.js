@@ -1,10 +1,11 @@
 import { GAME_CONFIG } from '../utils/Config.js';
 
 export class ScalingSystem {
-    constructor() {
+    constructor(settings) {
         this.gameScale = 1;
         this.scaledConstants = {};
         this.baseFruitSizes = null;
+        this.settings = settings;
     }
     
     /**
@@ -81,11 +82,14 @@ export class ScalingSystem {
             this.baseFruitSizes = fruits.map(fruit => ({ ...fruit }));
         }
         
+        // Get ball size multiplier from settings
+        const ballSizeMultiplier = this.settings ? this.settings.getBallSizeMultiplier() : 1.0;
+        
         // Always use the provided fruits for image data, but preserve cached sizes
         return fruits.map((fruit, index) => ({
             ...fruit,
-            radius: fruit.radius * this.gameScale,
-            scale: (fruit.radius * this.gameScale * 2) / fruit.imgSize,
+            radius: fruit.radius * this.gameScale * ballSizeMultiplier,
+            scale: (fruit.radius * this.gameScale * ballSizeMultiplier * 2) / fruit.imgSize,
             sizeIndex: index
         }));
     }
