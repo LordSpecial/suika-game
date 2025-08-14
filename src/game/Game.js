@@ -1,4 +1,4 @@
-import { GAME_CONFIG, GAME_STATES } from '../utils/Config.js';
+import { GAME_CONFIG } from '../utils/Config.js';
 import { ScalingSystem } from '../systems/ScalingSystem.js';
 import { Settings } from '../systems/Settings.js';
 import { Physics } from './Physics.js';
@@ -6,6 +6,13 @@ import { Menu } from '../entities/Menu.js';
 import { SettingsMenu } from '../entities/SettingsMenu.js';
 import { eventSystem, GAME_EVENTS } from '../systems/EventSystem.js';
 import { ResourceManager } from '../systems/ResourceManager.js';
+import { StateMachine } from './StateMachine.js';
+import { GameDataStore } from './GameDataStore.js';
+import { MenuState } from './states/MenuState.js';
+import { ReadyState } from './states/ReadyState.js';
+import { DropState } from './states/DropState.js';
+import { LoseState } from './states/LoseState.js';
+import { SettingsState } from './states/SettingsState.js';
 
 export class Game {
     constructor() {
@@ -17,7 +24,18 @@ export class Game {
         this.menu = new Menu(this.scalingSystem, this.settings);
         this.settingsMenu = new SettingsMenu(this.scalingSystem, this.settings);
         
-        this.state = GAME_STATES.MENU;
+        // Initialize data store
+        this.dataStore = new GameDataStore(this.eventSystem);
+        
+        // Initialize state machine
+        this.stateMachine = new StateMachine(this.eventSystem, [
+            new MenuState(this),
+            new ReadyState(this),
+            new DropState(this),
+            new LoseState(this),
+            new SettingsState(this)
+        ], 'MENU');
+        
         this.gameWidth = GAME_CONFIG.BASE_DIMENSIONS.width;
         this.gameHeight = GAME_CONFIG.BASE_DIMENSIONS.height;
         
@@ -32,20 +50,11 @@ export class Game {
             previewBall: null,
         };
         
-        this.gameData = {
-            score: 0,
-            fruitsMerged: [],
-            currentFruitSize: 0,
-            nextFruitSize: 0,
-            cache: { highscore: 0 }
-        };
-        
         this.scaledFruits = [];
         this.sounds = {};
         this.mouseConstraint = null;
         
-        // Frame-based timing
-        this.dropTimeoutCounter = 0;
+        // Game update loop
         this.gameUpdateLoop = null;
         
         // Physics update flag
@@ -92,7 +101,7 @@ export class Game {
         // Start game update loop for frame-based timing
         this.startGameUpdateLoop();
         
-        // Load highscore
+        // Load highscore into data store
         this.loadHighscore();
         
         // Hide UI initially
@@ -101,8 +110,8 @@ export class Game {
         // Setup "Try Again" button
         this.setupTryAgainButton();
         
-        // Initialize fruits merged counter
-        this.gameData.fruitsMerged = Array(GAME_CONFIG.FRUITS.length).fill(0);
+        // Subscribe to data changes
+        this.setupDataSubscriptions();
         
         // Start menu rendering first to ensure button bounds are calculated
         this.startMenuRendering();
@@ -114,25 +123,16 @@ export class Game {
     }
     
     /**
-     * Start game update loop for frame-based timing
+     * Start game update loop
      */
     startGameUpdateLoop() {
         const updateGame = () => {
-            // Update frame-based timers
-            if (this.state === GAME_STATES.DROP && this.dropTimeoutCounter > 0) {
-                this.dropTimeoutCounter--;
-                if (this.dropTimeoutCounter <= 0) {
-                    // Re-add preview ball and switch to ready state
-                    if (this.elements.previewBall) {
-                        this.physics.addBodies(this.elements.previewBall);
-                    }
-                    this.state = GAME_STATES.READY;
-                }
-            }
+            // Update state machine
+            const stateResult = this.stateMachine.update(16); // ~60fps
             
-            // Check for game over conditions during active gameplay
-            if (this.state === GAME_STATES.READY || this.state === GAME_STATES.DROP) {
-                this.checkGameOverConditions();
+            // Handle state transitions
+            if (stateResult && stateResult.transition) {
+                this.stateMachine.transition(stateResult.transition, stateResult.data);
             }
             
             // Continue the loop
@@ -140,6 +140,32 @@ export class Game {
         };
         
         updateGame();
+    }
+    
+    /**
+     * Setup data store subscriptions
+     */
+    setupDataSubscriptions() {
+        // Subscribe to score changes
+        this.dataStore.subscribe('score', (newScore) => {
+            if (this.elements.score) {
+                this.elements.score.innerText = newScore;
+            }
+        });
+        
+        // Subscribe to highscore changes
+        this.dataStore.subscribe('highscore', (newHighscore) => {
+            if (this.elements.statusValue) {
+                this.elements.statusValue.innerText = newHighscore;
+            }
+        });
+        
+        // Subscribe to next fruit changes
+        this.dataStore.subscribe('nextFruitSize', (size) => {
+            if (this.elements.nextFruitImg && this.scaledFruits[size]) {
+                this.elements.nextFruitImg.src = this.scaledFruits[size].img;
+            }
+        });
     }
     
     /**
@@ -322,30 +348,12 @@ export class Game {
         if (!canvas) return;
         
         const handleInteraction = (x, y) => {
-            if (this.state === GAME_STATES.MENU) {
-                const action = this.menu.handleClick(x, y);
-                
-                if (action === 'startGame') {
-                    this.startGame();
-                } else if (action === 'openSettings') {
-                    this.openSettings();
-                } else if (action === 'toggleMute') {
-                    this.toggleMute();
-                }
-            } else if (this.state === GAME_STATES.SETTINGS) {
-                const action = this.settingsMenu.handleClick(x, y);
-                
-                if (action === 'back_to_menu') {
-                    this.closeSettings();
-                } else if (action === 'theme_changed') {
-                    this.applyThemeChanges();
-                } else if (action === 'physics_changed') {
-                    // Store that physics settings changed, don't apply during active gameplay
-                    console.log('📝 Physics settings changed - will apply on next game start');
-                    this.physicsNeedsUpdate = true;
-                } else if (action === 'refresh') {
-                    // Settings menu will re-render automatically
-                }
+            // Let the state machine handle input
+            const result = this.stateMachine.handleInput({ type: 'click', x, y });
+            
+            // Handle any state transitions
+            if (result && result.transition) {
+                this.stateMachine.transition(result.transition, result.data);
             }
         };
         
@@ -404,20 +412,20 @@ export class Game {
         }
         
         // Render appropriate menu immediately first
-        if (this.state === GAME_STATES.MENU) {
+        if (this.stateMachine.isInState('MENU')) {
             this.menu.render(ctx, this.gameWidth, this.gameHeight);
-        } else if (this.state === GAME_STATES.SETTINGS) {
+        } else if (this.stateMachine.isInState('SETTINGS')) {
             this.settingsMenu.render(ctx, this.gameWidth, this.gameHeight);
         }
         
         const renderMenu = () => {
-            if (this.state === GAME_STATES.MENU) {
+            if (this.stateMachine.isInState('MENU')) {
                 this.menu.render(ctx, this.gameWidth, this.gameHeight);
                 requestAnimationFrame(renderMenu);
-            } else if (this.state === GAME_STATES.SETTINGS) {
+            } else if (this.stateMachine.isInState('SETTINGS')) {
                 this.settingsMenu.render(ctx, this.gameWidth, this.gameHeight);
                 requestAnimationFrame(renderMenu);
-            } else if (this.state === GAME_STATES.READY || this.state === GAME_STATES.DROP) {
+            } else if (this.stateMachine.isInState('READY') || this.stateMachine.isInState('DROP')) {
                 // Render home button during gameplay
                 this.renderHomeButton(ctx);
                 requestAnimationFrame(renderMenu);
@@ -425,7 +433,65 @@ export class Game {
         };
         
         // Continue with animation loop
+        this.menuRenderLoop = renderMenu;
         requestAnimationFrame(renderMenu);
+    }
+    
+    /**
+     * Stop menu rendering loop
+     */
+    stopMenuRendering() {
+        // The render loop will stop automatically when state changes
+        // since it checks the state in the requestAnimationFrame callback
+        this.menuRenderLoop = null;
+    }
+    
+    /**
+     * Start settings rendering
+     */
+    startSettingsRendering() {
+        // Settings rendering is handled by the same menu render loop
+        // which checks for SETTINGS state
+        this.startMenuRendering();
+    }
+    
+    /**
+     * Stop settings rendering
+     */
+    stopSettingsRendering() {
+        // Same as stopping menu rendering
+        this.stopMenuRendering();
+    }
+    
+    /**
+     * Setup settings interaction
+     */
+    setupSettingsInteraction() {
+        // Settings use the same interaction as menu
+        // The state machine will route clicks to the correct handler
+    }
+    
+    /**
+     * Remove settings event listeners
+     */
+    removeSettingsEventListeners() {
+        // Settings use the same event listeners as menu
+        // They will be removed when transitioning states
+    }
+    
+    /**
+     * Remove game event listeners
+     */
+    removeGameEventListeners() {
+        if (this.gameEventHandlers) {
+            const canvas = this.physics.render.canvas;
+            if (canvas) {
+                Object.entries(this.gameEventHandlers).forEach(([event, handler]) => {
+                    canvas.removeEventListener(event, handler);
+                });
+            }
+            this.gameEventHandlers = null;
+        }
     }
     
     /**
@@ -484,8 +550,8 @@ export class Game {
         // Update UI dimensions and scaling
         this.updateUI();
         
-        // Recreate walls if in game
-        if (this.state !== GAME_STATES.MENU) {
+        // Recreate walls if physics is initialized and not in menu
+        if (this.physics.engine && this.stateMachine && !this.stateMachine.isInState('MENU')) {
             this.recreateWalls();
         }
     }
@@ -592,9 +658,7 @@ export class Game {
      */
     openSettings() {
         this.playSound('click');
-        this.state = GAME_STATES.SETTINGS;
-        this.settingsMenu.resetView();
-        this.startMenuRendering();
+        this.stateMachine.transition('SETTINGS');
     }
     
     /**
@@ -614,33 +678,26 @@ export class Game {
      * Return to main menu from game
      */
     goToMenu() {
-        // Clear game state
-        this.state = GAME_STATES.MENU;
-        
+        // Transition to menu state - the state will handle cleanup
+        this.stateMachine.transition('MENU');
+    }
+    
+    /**
+     * Clear game elements
+     */
+    clearGame() {
         // Clear physics world
         this.physics.clearWorld();
         
-        // Recreate walls for menu
+        // Recreate walls
         const walls = this.physics.createWalls(this.gameWidth, this.gameHeight);
         this.physics.addBodies(walls);
         
         // Reset game elements
-        this.elements.fruits = [];
         this.elements.previewBall = null;
-        this.score = 0;
-        this.homeButtonBounds = null;
         
-        // Reset score colors to original
-        if (this.elements.score) {
-            this.elements.score.style.color = 'var(--col-bg-lighter)';
-            this.elements.score.style.textShadow = '3px 3px 0 var(--col-primary), -3px -3px 0 var(--col-primary), -3px 3px 0 var(--col-primary), 3px -3px 0 var(--col-primary)';
-        }
-        
-        // Setup menu interaction
-        this.setupMenuInteraction();
-        
-        // Render menu
-        this.startMenuRendering();
+        // Hide UI
+        this.elements.ui.style.display = 'none';
     }
     
     /**
@@ -648,8 +705,7 @@ export class Game {
      */
     closeSettings() {
         this.playSound('click');
-        this.state = GAME_STATES.MENU;
-        this.startMenuRendering();
+        this.stateMachine.transition('MENU');
     }
     
     /**
@@ -737,7 +793,7 @@ export class Game {
                     console.log(`🔍 Found ${nonStaticBodies.length} non-static bodies when changing gravity`);
                     
                     // If we're changing gravity while non-static bodies exist, this could cause issues
-                    if (nonStaticBodies.length > 0 && this.state !== GAME_STATES.MENU && this.state !== GAME_STATES.SETTINGS) {
+                    if (nonStaticBodies.length > 0 && !this.stateMachine.isInState('MENU') && !this.stateMachine.isInState('SETTINGS')) {
                         console.warn('⚠️ Changing gravity while game objects exist - this may cause physics issues');
                         
                         // Log the current positions of non-static bodies
@@ -856,64 +912,7 @@ export class Game {
         }
     }
     
-    /**
-     * Start the game
-     */
-    startGame() {
-        this.playSound('click');
-        
-        this.state = GAME_STATES.READY;
-        this.eventSystem.emit(GAME_EVENTS.GAME_START);
-        this.eventSystem.emit(GAME_EVENTS.STATE_CHANGE, { from: GAME_STATES.MENU, to: GAME_STATES.READY });
-        
-        // Remove menu event listeners to prevent conflicts
-        this.removeMenuEventListeners();
-        
-        // Create game walls
-        this.recreateWalls();
-        
-        // Show UI
-        this.calculateScore();
-        this.elements.endTitle.innerText = 'Game Over!';
-        this.elements.ui.style.display = 'block';
-        this.elements.end.style.display = 'none';
-        
-        // Reset score colors to original when starting game
-        if (this.elements.score) {
-            this.elements.score.style.color = 'var(--col-bg-lighter)';
-            this.elements.score.style.textShadow = '3px 3px 0 var(--col-primary), -3px -3px 0 var(--col-primary), -3px 3px 0 var(--col-primary), 3px -3px 0 var(--col-primary)';
-        }
-        
-        // Create preview ball
-        this.createPreviewBall();
-        
-        // Apply any pending physics changes now that we're in game state
-        if (this.physicsNeedsUpdate) {
-            this.applyPhysicsChanges();
-            this.physicsNeedsUpdate = false;
-        }
-        
-        // Setup game interaction
-        this.setupGameInteraction();
-        
-        // Set next fruit size
-        this.setNextFruitSize();
-    }
     
-    /**
-     * Create preview ball
-     */
-    createPreviewBall() {
-        const scaledHeight = this.scalingSystem.getScaledConstant('previewBallHeight');
-        this.elements.previewBall = this.physics.createFruit(
-            this.gameWidth / 2,
-            scaledHeight,
-            this.scaledFruits[0],
-            { isStatic: true },
-            this.getCurrentPhysicsOverrides()
-        );
-        this.physics.addBodies(this.elements.previewBall);
-    }
     
     /**
      * Setup game interaction
@@ -923,7 +922,7 @@ export class Game {
         
         // Mouse/touch movement for preview ball
         const handleMouseMove = (event) => {
-            if (this.state !== GAME_STATES.READY) return;
+            if (!this.stateMachine.isInState('READY')) return;
             if (!this.elements.previewBall) return;
             
             const rect = this.physics.render.canvas.getBoundingClientRect();
@@ -956,14 +955,14 @@ export class Game {
             }
             
             // Drop fruit if in ready state
-            if (this.state !== GAME_STATES.READY) return;
+            if (!this.stateMachine.isInState('READY')) return;
             this.addFruit(x);
         };
         
         // Touch handling
         const handleTouchMove = (event) => {
             event.preventDefault();
-            if (this.state !== GAME_STATES.READY) return;
+            if (!this.stateMachine.isInState('READY')) return;
             if (!this.elements.previewBall) return;
             if (event.touches.length === 0) return;
             
@@ -1000,7 +999,7 @@ export class Game {
             }
             
             // Drop fruit if in ready state
-            if (this.state !== GAME_STATES.READY) return;
+            if (!this.stateMachine.isInState('READY')) return;
             this.addFruit(x);
         };
         
@@ -1026,48 +1025,15 @@ export class Game {
      * Add fruit to the game
      */
     addFruit(x) {
-        if (this.state !== GAME_STATES.READY) return;
+        if (!this.stateMachine.isInState('READY')) return;
         
-        this.playSound('click');
+        // Let the state handle the drop
+        const result = this.stateMachine.handleInput({ type: 'drop', x });
         
-        this.state = GAME_STATES.DROP;
-        const scaledHeight = this.scalingSystem.getScaledConstant('previewBallHeight');
-        const fruitData = {
-            ...this.scaledFruits[this.gameData.currentFruitSize],
-            sizeIndex: this.gameData.currentFruitSize
-        };
-        
-        const latestFruit = this.physics.createFruit(x, scaledHeight, fruitData, {}, this.getCurrentPhysicsOverrides());
-        this.physics.addBodies(latestFruit);
-        
-        // Log velocity for debugging
-        this.logFruitVelocity(latestFruit);
-        
-        this.gameData.currentFruitSize = this.gameData.nextFruitSize;
-        this.setNextFruitSize();
-        this.calculateScore();
-        
-        // Remove preview ball and create new one
-        this.physics.removeBodies(this.elements.previewBall);
-        
-        const newPreviewData = {
-            ...this.scaledFruits[this.gameData.currentFruitSize],
-            sizeIndex: this.gameData.currentFruitSize
-        };
-        
-        this.elements.previewBall = this.physics.createFruit(
-            x, 
-            scaledHeight, 
-            newPreviewData,
-            { 
-                isStatic: true,
-                collisionFilter: { mask: 0x0040 }
-            },
-            this.getCurrentPhysicsOverrides()
-        );
-        
-        // Set frame-based timeout counter
-        this.dropTimeoutCounter = GAME_CONFIG.GAMEPLAY.dropTimeoutFrames;
+        // Handle state transition
+        if (result && result.transition) {
+            this.stateMachine.transition(result.transition, result.data);
+        }
     }
     
     /**
@@ -1100,7 +1066,8 @@ export class Game {
                     newSize = 0;
                 }
                 
-                this.gameData.fruitsMerged[bodyA.sizeIndex] += 1;
+                // Record merge in data store
+                this.dataStore.recordMerge(newSize);
                 
                 // Merge fruits
                 const midPosX = (bodyA.position.x + bodyB.position.x) / 2;
@@ -1126,6 +1093,9 @@ export class Game {
                 // Add pop effect
                 this.addPopEffect(midPosX, midPosY, bodyA.circleRadius);
                 
+                // Record the merge
+                this.dataStore.recordMerge(newSize);
+                
                 this.calculateScore();
             }
         });
@@ -1147,34 +1117,31 @@ export class Game {
      * Lose game
      */
     loseGame() {
-        const prevState = this.state;
-        this.state = GAME_STATES.LOSE;
-        this.eventSystem.emit(GAME_EVENTS.GAME_OVER, { score: this.gameData.score });
-        this.eventSystem.emit(GAME_EVENTS.STATE_CHANGE, { from: prevState, to: GAME_STATES.LOSE });
-        this.elements.end.style.display = 'flex';
-        this.physics.runner.enabled = false;
-        this.saveHighscore();
+        // State transition is now handled by the state machine
+        this.stateMachine.transition('LOSE');
     }
     
     /**
      * Set next fruit size
      */
     setNextFruitSize() {
-        this.gameData.nextFruitSize = Math.floor(Math.random() * GAME_CONFIG.GAMEPLAY.maxDropableSize);
-        this.elements.nextFruitImg.src = this.scaledFruits[this.gameData.nextFruitSize].img;
+        const nextSize = Math.floor(Math.random() * GAME_CONFIG.GAMEPLAY.maxDropableSize);
+        this.dataStore.set('nextFruitSize', nextSize);
+        this.elements.nextFruitImg.src = this.scaledFruits[nextSize].img;
     }
     
     /**
      * Calculate and update score
      */
     calculateScore() {
-        const score = this.gameData.fruitsMerged.reduce((total, count, sizeIndex) => {
+        const fruitsMerged = this.dataStore.get('fruitsMerged');
+        const score = fruitsMerged.reduce((total, count, sizeIndex) => {
             const value = GAME_CONFIG.FRUITS[sizeIndex].scoreValue * count;
             return total + value;
         }, 0);
         
-        this.gameData.score = score;
-        this.elements.score.innerText = this.gameData.score;
+        this.dataStore.set('score', score);
+        this.elements.score.innerText = score;
     }
     
     /**
@@ -1187,7 +1154,8 @@ export class Game {
             return;
         }
         
-        this.gameData.cache = JSON.parse(gameCache);
+        const data = JSON.parse(gameCache);
+        this.dataStore.loadData(data);
         this.showHighscore();
     }
     
@@ -1196,20 +1164,24 @@ export class Game {
      */
     saveHighscore() {
         this.calculateScore();
-        if (this.gameData.score < this.gameData.cache.highscore) return;
+        const score = this.dataStore.get('score');
+        const highscore = this.dataStore.get('highscore');
         
-        this.gameData.cache.highscore = this.gameData.score;
-        this.showHighscore();
-        this.elements.endTitle.innerText = 'New Highscore!';
+        if (score > highscore) {
+            this.dataStore.set('highscore', score);
+            this.showHighscore();
+            this.elements.endTitle.innerText = 'New Highscore!';
+        }
         
-        localStorage.setItem('suika-game-cache', JSON.stringify(this.gameData.cache));
+        const dataToSave = this.dataStore.saveData();
+        localStorage.setItem('suika-game-cache', JSON.stringify(dataToSave));
     }
     
     /**
      * Show highscore in UI
      */
     showHighscore() {
-        this.elements.statusValue.innerText = this.gameData.cache.highscore;
+        this.elements.statusValue.innerText = this.dataStore.get('highscore');
     }
     
     /**
@@ -1221,56 +1193,14 @@ export class Game {
         
         const handleTryAgain = (event) => {
             event.preventDefault();
-            this.restartGame();
+            // Use state machine to handle input
+            const result = this.stateMachine.handleInput({ type: 'tryAgain' });
+            if (result && result.transition) {
+                this.stateMachine.transition(result.transition, result.data);
+            }
         };
         
         tryAgainButton.addEventListener('click', handleTryAgain);
         tryAgainButton.addEventListener('touchstart', handleTryAgain);
-    }
-    
-    /**
-     * Restart the game
-     */
-    restartGame() {
-        // Reset game state
-        this.state = GAME_STATES.MENU;
-        
-        // Clear physics world
-        this.physics.clearWorld();
-        
-        // Re-enable physics runner
-        this.physics.runner.enabled = true;
-        
-        // Reset game data
-        this.gameData.score = 0;
-        this.gameData.fruitsMerged = Array(GAME_CONFIG.FRUITS.length).fill(0);
-        this.gameData.currentFruitSize = 0;
-        this.gameData.nextFruitSize = 0;
-        
-        // Hide UI
-        this.elements.ui.style.display = 'none';
-        this.elements.end.style.display = 'none';
-        
-        // Remove preview ball reference
-        this.elements.previewBall = null;
-        
-        // Reset frame counter
-        this.dropTimeoutCounter = 0;
-        
-        // Restart menu rendering and interaction
-        this.startMenuRendering();
-        this.setupMenuInteraction();
-        
-        // Remove game event listeners
-        if (this.gameEventHandlers) {
-            const canvas = this.physics.render.canvas;
-            Object.entries(this.gameEventHandlers).forEach(([event, handler]) => {
-                canvas.removeEventListener(event, handler);
-            });
-            this.gameEventHandlers = null;
-        }
-        
-        // Restart menu
-        this.startMenuRendering();
     }
 }

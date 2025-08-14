@@ -85,7 +85,8 @@ export class ScalingSystem {
         return this.baseFruitSizes.map((baseFruit, index) => ({
             ...baseFruit,
             radius: baseFruit.radius * this.gameScale,
-            scale: (baseFruit.radius * this.gameScale * 2) / baseFruit.imgSize
+            scale: (baseFruit.radius * this.gameScale * 2) / baseFruit.imgSize,
+            sizeIndex: index
         }));
     }
     
