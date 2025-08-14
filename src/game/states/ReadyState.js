@@ -113,16 +113,12 @@ export class ReadyState extends GameState {
         
         // Create preview ball
         const scaledBallHeight = this.game.scalingSystem.getScaledConstant('previewBallHeight');
-        const currentFruit = this.game.scaledFruits[this.game.dataStore.get('currentFruitSize')];
+        const currentFruitSize = this.game.dataStore.get('currentFruitSize');
         
-        this.game.elements.previewBall = this.game.physics.createFruit(
+        this.game.elements.previewBall = this.game.fruitFactory.createPreviewFruit(
+            currentFruitSize,
             this.game.gameWidth / 2,
-            scaledBallHeight,
-            currentFruit,
-            {
-                isStatic: true,
-                collisionFilter: { group: -1 }
-            }
+            scaledBallHeight
         );
         
         this.game.physics.addBodies(this.game.elements.previewBall);
@@ -132,14 +128,13 @@ export class ReadyState extends GameState {
         if (!this.game.elements.previewBall) return;
         
         const ball = this.game.elements.previewBall;
-        const currentFruit = this.game.scaledFruits[this.game.dataStore.get('currentFruitSize')];
+        const currentFruitSize = this.game.dataStore.get('currentFruitSize');
         
         // Create actual fruit at preview position
-        const droppedFruit = this.game.physics.createFruit(
+        const droppedFruit = this.game.fruitFactory.createDroppedFruit(
+            currentFruitSize,
             ball.position.x,
             ball.position.y,
-            currentFruit,
-            {},
             this.game.getCurrentPhysicsOverrides()
         );
         
@@ -182,7 +177,6 @@ export class ReadyState extends GameState {
             // Game over: 80% of fruit above the line with upward velocity
             const twentyPercentFromTop = fruitTop + (body.circleRadius * 2 * 0.2);
             if (twentyPercentFromTop < scaledLoseHeight && body.velocity.y < 0) {
-                console.log(`🎯 Game over: 80% of fruit above line with upward velocity (${body.velocity.y.toFixed(2)})`);
                 return { transition: 'LOSE' };
             }
         }

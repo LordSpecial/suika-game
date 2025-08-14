@@ -17,7 +17,6 @@ export class GameState {
      */
     enter(data = null) {
         this.isActive = true;
-        console.log(`Entering state: ${this.name}`);
     }
     
     /**
@@ -25,7 +24,6 @@ export class GameState {
      */
     exit() {
         this.isActive = false;
-        console.log(`Exiting state: ${this.name}`);
     }
     
     /**

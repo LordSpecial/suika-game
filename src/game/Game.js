@@ -4,8 +4,11 @@ import { Settings } from '../systems/Settings.js';
 import { Physics } from './Physics.js';
 import { Menu } from '../entities/Menu.js';
 import { SettingsMenu } from '../entities/SettingsMenu.js';
+import { FruitFactory } from '../entities/FruitFactory.js';
 import { eventSystem, GAME_EVENTS } from '../systems/EventSystem.js';
 import { ResourceManager } from '../systems/ResourceManager.js';
+import { AudioSystem } from '../systems/AudioSystem.js';
+import { ScoringSystem } from './ScoringSystem.js';
 import { StateMachine } from './StateMachine.js';
 import { GameDataStore } from './GameDataStore.js';
 import { MenuState } from './states/MenuState.js';
@@ -24,8 +27,17 @@ export class Game {
         this.menu = new Menu(this.scalingSystem, this.settings);
         this.settingsMenu = new SettingsMenu(this.scalingSystem, this.settings);
         
+        // Initialize audio system
+        this.audioSystem = new AudioSystem(this.eventSystem, this.settings, this.resourceManager);
+        
         // Initialize data store
         this.dataStore = new GameDataStore(this.eventSystem);
+        
+        // Initialize scoring system
+        this.scoringSystem = new ScoringSystem(this.eventSystem, this.dataStore);
+        
+        // Initialize fruit factory
+        this.fruitFactory = new FruitFactory(this.physics, this.scalingSystem, this.resourceManager, this.eventSystem);
         
         // Initialize state machine
         this.stateMachine = new StateMachine(this.eventSystem, [
@@ -50,8 +62,6 @@ export class Game {
             previewBall: null,
         };
         
-        this.scaledFruits = [];
-        this.sounds = {};
         this.mouseConstraint = null;
         
         // Game update loop
@@ -162,8 +172,11 @@ export class Game {
         
         // Subscribe to next fruit changes
         this.dataStore.subscribe('nextFruitSize', (size) => {
-            if (this.elements.nextFruitImg && this.scaledFruits[size]) {
-                this.elements.nextFruitImg.src = this.scaledFruits[size].img;
+            if (this.elements.nextFruitImg && this.fruitFactory) {
+                const fruitData = this.fruitFactory.getFruitData(size);
+                if (fruitData) {
+                    this.elements.nextFruitImg.src = fruitData.img;
+                }
             }
         });
     }
@@ -187,7 +200,7 @@ export class Game {
         
         // Add listener for loading progress
         const progressHandler = (data) => {
-            console.log(`Loading resources: ${data.percentage.toFixed(0)}%`);
+            // Progress handler available if needed
         };
         this.eventSystem.on('resource:load:progress', progressHandler);
         
@@ -196,12 +209,12 @@ export class Game {
             await this.resourceManager.loadAll(manifest);
             
             // Setup sounds from loaded resources
-            this.setupSoundsFromResources();
+            this.audioSystem.initializeSounds();
             
             // Update menu images
             this.updateMenuImages();
             
-            console.log('All resources loaded successfully');
+            // All resources loaded successfully
         } catch (error) {
             console.error('Failed to load resources:', error);
         } finally {
@@ -211,33 +224,10 @@ export class Game {
     }
     
     /**
-     * Setup sounds from loaded resources
-     */
-    setupSoundsFromResources() {
-        // Get sounds from ResourceManager
-        this.sounds.click = this.resourceManager.getSound('click');
-        
-        // Get pop sounds
-        for (let i = 0; i < 11; i++) {
-            this.sounds[`pop${i}`] = this.resourceManager.getSound(`pop${i}`);
-        }
-        
-        // Audio is already configured for iOS in ResourceManager
-    }
-    
-    /**
      * Play sound with mute check
      */
     playSound(soundName) {
-        if (!this.settings.isMuted() && this.sounds[soundName]) {
-            try {
-                // Reset current time to allow rapid successive plays
-                this.sounds[soundName].currentTime = 0;
-                this.sounds[soundName].play();
-            } catch (error) {
-                console.warn(`Failed to play sound ${soundName}:`, error);
-            }
-        }
+        this.audioSystem.play(soundName);
     }
     
     /**
@@ -326,7 +316,6 @@ export class Game {
             // Game over: 80% of fruit above the line with upward velocity
             const twentyPercentFromTop = fruitTop + (body.circleRadius * 2 * 0.2);
             if (twentyPercentFromTop < scaledLoseHeight && body.velocity.y < 0) {
-                console.log(`🎯 Game over: 80% of fruit above line with upward velocity (${body.velocity.y.toFixed(2)})`);
                 this.loseGame();
                 return;
             }
@@ -337,7 +326,7 @@ export class Game {
      * Initialize fruits with base sizes
      */
     initializeFruits() {
-        this.scaledFruits = this.scalingSystem.scaleFruits(GAME_CONFIG.FRUITS);
+        // Fruits are now initialized in FruitFactory
     }
     
     /**
@@ -346,6 +335,9 @@ export class Game {
     setupMenuInteraction() {
         const canvas = this.physics.render.canvas;
         if (!canvas) return;
+        
+        // Remove existing handlers first to prevent duplicates
+        this.removeMenuEventListeners();
         
         const handleInteraction = (x, y) => {
             // Let the state machine handle input
@@ -511,7 +503,11 @@ export class Game {
         
         // Update scaling
         this.scalingSystem.updateScaling(this.gameWidth, this.gameHeight);
-        this.scaledFruits = this.scalingSystem.scaleFruits(GAME_CONFIG.FRUITS);
+        
+        // Update fruit factory scaling
+        if (this.fruitFactory) {
+            this.fruitFactory.updateScaledFruits();
+        }
         
         // Update physics dimensions
         if (this.physics.render) {
@@ -665,13 +661,7 @@ export class Game {
      * Toggle mute state
      */
     toggleMute() {
-        const isMuted = this.settings.toggleMute();
-        console.log(`🔊 Audio ${isMuted ? 'muted' : 'unmuted'}`);
-        
-        // Play a click sound to confirm the action (only if unmuting)
-        if (!isMuted) {
-            this.playSound('click');
-        }
+        return this.audioSystem.toggleMute();
     }
     
     /**
@@ -749,7 +739,7 @@ export class Game {
         bodies.forEach(body => {
             // Check if this is a fruit body (has sizeIndex and is not static)
             if (body.sizeIndex !== undefined && !body.isStatic && body.render && body.render.sprite) {
-                const newFruitConfig = this.scaledFruits[body.sizeIndex];
+                const newFruitConfig = this.fruitFactory.getFruitData(body.sizeIndex);
                 if (newFruitConfig) {
                     body.render.sprite.texture = newFruitConfig.img;
                 }
@@ -758,7 +748,7 @@ export class Game {
         
         // Update preview ball if it exists
         if (this.elements.previewBall && this.elements.previewBall.sizeIndex !== undefined) {
-            const newFruitConfig = this.scaledFruits[this.elements.previewBall.sizeIndex];
+            const newFruitConfig = this.fruitFactory.getFruitData(this.elements.previewBall.sizeIndex);
             if (newFruitConfig && this.elements.previewBall.render && this.elements.previewBall.render.sprite) {
                 this.elements.previewBall.render.sprite.texture = newFruitConfig.img;
             }
@@ -1066,9 +1056,6 @@ export class Game {
                     newSize = 0;
                 }
                 
-                // Record merge in data store
-                this.dataStore.recordMerge(newSize);
-                
                 // Merge fruits
                 const midPosX = (bodyA.position.x + bodyB.position.x) / 2;
                 const midPosY = (bodyA.position.y + bodyB.position.y) / 2;
@@ -1079,38 +1066,25 @@ export class Game {
                 // Play pop sound
                 this.playSound(`pop${bodyA.sizeIndex}`);
                 
-                // Remove old fruits and add new merged fruit
+                // Remove old fruits
                 this.physics.removeBodies([bodyA, bodyB]);
                 
-                const newFruitData = {
-                    ...this.scaledFruits[newSize],
-                    sizeIndex: newSize
-                };
-                
-                const newFruit = this.physics.createFruit(midPosX, midPosY, newFruitData, {}, this.getCurrentPhysicsOverrides());
+                // Create merged fruit
+                const newFruit = this.fruitFactory.createMergedFruit(
+                    bodyA,
+                    bodyB,
+                    newSize,
+                    this.getCurrentPhysicsOverrides()
+                );
                 this.physics.addBodies(newFruit);
                 
                 // Add pop effect
-                this.addPopEffect(midPosX, midPosY, bodyA.circleRadius);
+                this.fruitFactory.createMergeEffect(midPosX, midPosY, bodyA.circleRadius);
                 
-                // Record the merge
-                this.dataStore.recordMerge(newSize);
-                
-                this.calculateScore();
+                // Record the merge and update score
+                this.scoringSystem.recordMerge(newSize);
             }
         });
-    }
-    
-    /**
-     * Add pop effect
-     */
-    addPopEffect(x, y, radius) {
-        const popEffect = this.physics.createPopEffect(x, y, radius);
-        this.physics.addBodies(popEffect);
-        
-        setTimeout(() => {
-            this.physics.removeBodies(popEffect);
-        }, 100);
     }
     
     /**
@@ -1127,21 +1101,17 @@ export class Game {
     setNextFruitSize() {
         const nextSize = Math.floor(Math.random() * GAME_CONFIG.GAMEPLAY.maxDropableSize);
         this.dataStore.set('nextFruitSize', nextSize);
-        this.elements.nextFruitImg.src = this.scaledFruits[nextSize].img;
+        const nextFruitData = this.fruitFactory.getFruitData(nextSize);
+        if (nextFruitData) {
+            this.elements.nextFruitImg.src = nextFruitData.img;
+        }
     }
     
     /**
      * Calculate and update score
      */
     calculateScore() {
-        const fruitsMerged = this.dataStore.get('fruitsMerged');
-        const score = fruitsMerged.reduce((total, count, sizeIndex) => {
-            const value = GAME_CONFIG.FRUITS[sizeIndex].scoreValue * count;
-            return total + value;
-        }, 0);
-        
-        this.dataStore.set('score', score);
-        this.elements.score.innerText = score;
+        return this.scoringSystem.calculateScore();
     }
     
     /**

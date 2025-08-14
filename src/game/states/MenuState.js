@@ -53,9 +53,6 @@ export class MenuState extends GameState {
         if (input.type === 'click') {
             if (!this.menuRenderer) {
                 console.error('MenuState.handleInput: menuRenderer is undefined');
-                console.log('this:', this);
-                console.log('this.game:', this.game);
-                console.log('this.game.menu:', this.game?.menu);
                 return null;
             }
             
