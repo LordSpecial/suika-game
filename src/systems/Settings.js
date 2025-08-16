@@ -175,8 +175,8 @@ export class Settings {
      * Get ball size multiplier
      */
     getBallSizeMultiplier() {
-        const multipliers = [0.5, 1.0, 1.5];
-        return multipliers[this.settings.physics.ballSize] || 1.0;
+        const multipliers = [0.75, 1.2, 1.75];
+        return multipliers[this.settings.physics.ballSize] || 1.2;
     }
     
     /**
