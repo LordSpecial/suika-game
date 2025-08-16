@@ -60,8 +60,8 @@ export class DropState extends GameState {
             this.game.elements.previewBall = null;
         }
         
-        // Set next fruit size
-        this.game.setNextFruitSize();
+        // The fruit queue will be advanced when transitioning back to READY
+        // For now, just use the current fruit size for the preview ball
         
         // Create preview ball but don't add it to physics yet
         const scaledBallHeight = this.game.scalingSystem.getScaledConstant('previewBallHeight');

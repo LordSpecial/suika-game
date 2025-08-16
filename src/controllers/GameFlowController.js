@@ -149,14 +149,40 @@ export class GameFlowController {
     }
     
     /**
-     * Set next fruit size
+     * Initialize fruit queue for new game
+     */
+    initializeFruitQueue() {
+        const maxDropableSize = GAME_CONFIG.GAMEPLAY.maxDropableSize;
+        
+        // Generate first current and next fruits randomly
+        this.game.dataStore.set('currentFruitSize', Math.floor(Math.random() * maxDropableSize));
+        this.game.dataStore.set('nextFruitSize', Math.floor(Math.random() * maxDropableSize));
+    }
+    
+    /**
+     * Advance fruit queue - move next to current, generate new next
+     */
+    advanceFruitQueue() {
+        const maxDropableSize = GAME_CONFIG.GAMEPLAY.maxDropableSize;
+        
+        // Move next fruit to current position
+        const previousNext = this.game.dataStore.get('nextFruitSize');
+        this.game.dataStore.set('currentFruitSize', previousNext);
+        
+        // Generate new random next fruit
+        const newNext = Math.floor(Math.random() * maxDropableSize);
+        this.game.dataStore.set('nextFruitSize', newNext);
+        
+        // Return the new next fruit size for immediate UI update
+        return newNext;
+    }
+    
+    /**
+     * Set next fruit size (deprecated - use initializeFruitQueue or advanceFruitQueue)
      */
     setNextFruitSize() {
-        const maxDropableSize = GAME_CONFIG.GAMEPLAY.maxDropableSize;
-        const nextSize = Math.floor(Math.random() * maxDropableSize);
-        
-        this.game.dataStore.set('currentFruitSize', nextSize);
-        this.game.dataStore.set('nextFruitSize', Math.floor(Math.random() * maxDropableSize));
+        // Maintain backwards compatibility
+        this.initializeFruitQueue();
     }
     
     /**

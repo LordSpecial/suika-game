@@ -117,8 +117,8 @@ export class ReadyState extends GameState {
             this.game.elements.previewBall = null;
         }
         
-        // Set next fruit size
-        this.game.setNextFruitSize();
+        // Initialize fruit queue for new game
+        this.game.gameFlowController.initializeFruitQueue();
         
         // Create preview ball
         const scaledBallHeight = this.game.scalingSystem.getScaledConstant('previewBallHeight');
@@ -163,8 +163,14 @@ export class ReadyState extends GameState {
             position: { x: droppedFruit.position.x, y: droppedFruit.position.y }
         });
         
-        // Set current fruit to next fruit
-        this.game.dataStore.set('currentFruitSize', this.game.dataStore.get('nextFruitSize'));
+        // Advance the fruit queue: next becomes current, generate new next
+        const newNextSize = this.game.gameFlowController.advanceFruitQueue();
+        
+        // Immediately update next fruit UI to show the new next fruit
+        if (this.game.fruitFactory) {
+            const nextFruitData = this.game.fruitFactory.getFruitData(newNextSize);
+            this.game.uiController.updateNextFruit(nextFruitData);
+        }
     }
     
     checkGameOverConditions() {
