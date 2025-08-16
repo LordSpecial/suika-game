@@ -54,6 +54,12 @@ export class DropState extends GameState {
     }
     
     createNextPreviewBall() {
+        // Remove existing preview ball if it exists
+        if (this.game.elements.previewBall) {
+            this.game.physics.removeBodies([this.game.elements.previewBall]);
+            this.game.elements.previewBall = null;
+        }
+        
         // Set next fruit size
         this.game.setNextFruitSize();
         

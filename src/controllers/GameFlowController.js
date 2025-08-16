@@ -73,11 +73,14 @@ export class GameFlowController {
      * Clear game state
      */
     clearGame() {
+        // Remove preview ball from physics world if it exists
+        if (this.game.elements.previewBall) {
+            this.game.physics.removeBodies([this.game.elements.previewBall]);
+            this.game.elements.previewBall = null;
+        }
+        
         // Clear all physics bodies except walls
         this.game.physicsController.clearBodies();
-        
-        // Clear preview ball reference
-        this.game.elements.previewBall = null;
         
         // Hide UI elements
         this.game.uiController.hideEndModal();
