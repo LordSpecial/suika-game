@@ -17,9 +17,9 @@ export class ThemeController {
     applyThemeChanges() {
         const currentTheme = this.game.settings.getCurrentTheme();
         
-        // Update fruit theme
+        // Update ball theme
         if (currentTheme.balls) {
-            this.updateFruitTheme(currentTheme.balls);
+            this.updateBallTheme(currentTheme.balls);
         }
         
         // Update background theme
@@ -47,33 +47,33 @@ export class ThemeController {
     }
     
     /**
-     * Update fruit theme for existing fruits
+     * Update ball theme for existing balls
      */
-    updateFruitTheme(ballTheme) {
-        // Update existing fruits in the game
+    updateBallTheme(ballTheme) {
+        // Update existing balls in the game
         const bodies = this.game.physics.engine.world.bodies;
         
         bodies.forEach(body => {
             // Skip static bodies (walls)
             if (body.isStatic) return;
             
-            // Skip if body doesn't have a sizeIndex (not a fruit)
+            // Skip if body doesn't have a sizeIndex (not a ball)
             if (body.sizeIndex === undefined) return;
             
             // Update the render texture based on new theme
             if (ballTheme && ballTheme.items && body.sizeIndex < ballTheme.items.length) {
                 const themeKey = this.game.settings.settings.theme.balls;
-                const fruitImage = this.game.resourceManager.getImage(`${themeKey}_${body.sizeIndex}`);
+                const ballImage = this.game.resourceManager.getImage(`${themeKey}_${body.sizeIndex}`);
                 
-                if (fruitImage && body.render) {
-                    body.render.sprite.texture = fruitImage.src;
+                if (ballImage && body.render) {
+                    body.render.sprite.texture = ballImage.src;
                 }
             }
         });
         
-        // Update factory's cached fruits
-        if (this.game.fruitFactory) {
-            this.game.fruitFactory.updateScaledFruits();
+        // Update factory's cached balls
+        if (this.game.ballFactory) {
+            this.game.ballFactory.updateScaledBalls();
         }
     }
     
@@ -120,19 +120,19 @@ export class ThemeController {
     }
     
     /**
-     * Update existing fruits with new theme and physics
+     * Update existing balls with new theme and physics
      */
-    updateExistingFruits() {
+    updateExistingBalls() {
         const currentTheme = this.game.settings.getCurrentTheme();
         const physicsOverrides = this.getCurrentPhysicsOverrides();
         
         // Update visual theme
         if (currentTheme.balls) {
-            this.updateFruitTheme(currentTheme.balls);
+            this.updateBallTheme(currentTheme.balls);
         }
         
         // Update physics properties
-        this.game.physicsController.updateExistingFruits(physicsOverrides);
+        this.game.physicsController.updateExistingBalls(physicsOverrides);
     }
     
     /**

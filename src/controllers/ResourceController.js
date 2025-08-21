@@ -60,8 +60,8 @@ export class ResourceController {
             if (bgImage) this.game.menu.menuImages.background = bgImage;
             if (btnImage) this.game.menu.menuImages.startButton = btnImage;
             
-            // Update fruit images for menu
-            this.updateMenuFruitImages();
+            // Update ball images for menu
+            this.updateMenuBallImages();
         }
         
         // Update settings menu images
@@ -75,19 +75,19 @@ export class ResourceController {
     }
     
     /**
-     * Update menu fruit images based on current theme
+     * Update menu ball images based on current theme
      */
-    updateMenuFruitImages() {
+    updateMenuBallImages() {
         if (!this.game.menu) return;
         
-        this.game.menu.fruitImages = {};
+        this.game.menu.ballImages = {};
         const currentTheme = this.game.settings.getCurrentTheme();
         
         if (currentTheme && currentTheme.balls) {
             const themeKey = this.game.settings.settings.theme.balls;
             currentTheme.balls.items.forEach((item, index) => {
                 const img = this.game.resourceManager.getImage(`${themeKey}_${index}`);
-                if (img) this.game.menu.fruitImages[index] = img;
+                if (img) this.game.menu.ballImages[index] = img;
             });
         }
     }
@@ -121,7 +121,7 @@ export class ResourceController {
             
             // Update relevant images after loading
             if (themeType === 'balls') {
-                this.updateMenuFruitImages();
+                this.updateMenuBallImages();
             }
         } catch (error) {
             console.error(`Failed to load ${themeType} theme resources:`, error);

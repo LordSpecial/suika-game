@@ -159,9 +159,9 @@ export const GAME_EVENTS = {
     GAME_RESUME: 'game:resume',
     
     // Gameplay events
-    FRUIT_DROP: 'fruit:drop',
-    FRUIT_MERGE: 'fruit:merge',
-    FRUIT_CREATE: 'fruit:create',
+    BALL_DROP: 'ball:drop',
+    BALL_MERGE: 'ball:merge',
+    BALL_CREATE: 'ball:create',
     
     // Scoring events
     SCORE_UPDATE: 'score:update',

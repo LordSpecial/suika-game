@@ -158,11 +158,11 @@ export class InputController {
             
             this.game.elements.previewBall.position.x = x;
             
-            // Update score opacity based on fruit position
+            // Update score opacity based on ball position
             this.game.renderingController.updateScoreOpacity(x);
         };
         
-        // Mouse/touch release for dropping fruit or home button
+        // Mouse/touch release for dropping ball or home button
         const handleMouseUp = (event) => {
             const rect = this.game.physics.render.canvas.getBoundingClientRect();
             // Use logical canvas dimensions (not scaled by devicePixelRatio)
@@ -182,9 +182,9 @@ export class InputController {
                 return;
             }
             
-            // Drop fruit if in ready state
+            // Drop ball if in ready state
             if (!this.game.stateMachine.isInState('READY')) return;
-            this.game.addFruit(x);
+            this.game.addBall(x);
         };
         
         // Touch handling
@@ -201,7 +201,7 @@ export class InputController {
             
             this.game.elements.previewBall.position.x = x;
             
-            // Update score opacity based on fruit position
+            // Update score opacity based on ball position
             this.game.renderingController.updateScoreOpacity(x);
         };
         
@@ -227,9 +227,9 @@ export class InputController {
                 return;
             }
             
-            // Drop fruit if in ready state
+            // Drop ball if in ready state
             if (!this.game.stateMachine.isInState('READY')) return;
-            this.game.addFruit(x);
+            this.game.addBall(x);
         };
         
         const canvas = this.game.physics.render.canvas;

@@ -6,7 +6,7 @@ export class Menu {
         this.scalingSystem = scalingSystem;
         this.settings = settings;
         this.menuImages = {};
-        this.fruitImages = {};  // Separate property for fruit images
+        this.ballImages = {};  // Separate property for ball images
         this.startButtonBounds = null;
         this.settingsButtonBounds = null;
         this.muteButtonBounds = null;
@@ -22,7 +22,7 @@ export class Menu {
             this.renderer = new Renderer(ctx.canvas, this.scalingSystem);
         }
         
-        const { MENU, FRUITS } = GAME_CONFIG;
+        const { MENU, BALLS } = GAME_CONFIG;
         const scale = this.scalingSystem.getScale();
         
         // Clear canvas
@@ -41,25 +41,25 @@ export class Menu {
             this.renderer.drawImage(this.menuImages.background, bgX, bgY, bgSize, bgSize);
         }
         
-        // Draw fruit circle
+        // Draw ball circle
         const circleRadius = MENU.circleRadius * scale;
         const centerX = gameWidth / 2;
         const centerY = gameHeight * bgYPercent; // Use same Y position as background
-        const fruitRadius = MENU.fruitRadius * scale;
+        const ballRadius = MENU.ballRadius * scale;
         
-        FRUITS.forEach((fruit, index) => {
-            const angle = (Math.PI * 2 * index) / FRUITS.length;
+        BALLS.forEach((ball, index) => {
+            const angle = (Math.PI * 2 * index) / BALLS.length;
             const x = centerX + circleRadius * Math.cos(angle);
             const y = centerY + circleRadius * Math.sin(angle);
             
-            if (this.fruitImages && this.fruitImages[index] && this.fruitImages[index].complete) {
-                const fruitSize = fruitRadius * 2;
+            if (this.ballImages && this.ballImages[index] && this.ballImages[index].complete) {
+                const ballSize = ballRadius * 2;
                 this.renderer.drawImageCentered(
-                    this.fruitImages[index],
+                    this.ballImages[index],
                     x,
                     y,
-                    fruitSize,
-                    fruitSize
+                    ballSize,
+                    ballSize
                 );
             }
         });
@@ -213,6 +213,6 @@ export class Menu {
      * Update menu (for animations in the future)
      */
     update(deltaTime) {
-        // Future: menu animations, fruit rotations, etc.
+        // Future: menu animations, ball rotations, etc.
     }
 }

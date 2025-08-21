@@ -22,13 +22,13 @@ export class GameDataStore {
             // Game state
             score: 0,
             highscore: 0,
-            fruitsMerged: new Array(11).fill(0), // Track merges per fruit type
-            totalFruitsDropped: 0,
+            ballsMerged: new Array(11).fill(0), // Track merges per ball type
+            totalBallsDropped: 0,
             totalMerges: 0,
             
             // Current game
-            currentFruitSize: 0,
-            nextFruitSize: 0,
+            currentBallSize: 0,
+            nextBallSize: 0,
             gameStartTime: null,
             gameEndTime: null,
             
@@ -240,8 +240,8 @@ export class GameDataStore {
         this.set('gameStartTime', Date.now());
         this.set('gameEndTime', null);
         this.set('score', 0);
-        this.set('fruitsMerged', new Array(11).fill(0));
-        this.set('totalFruitsDropped', 0);
+        this.set('ballsMerged', new Array(11).fill(0));
+        this.set('totalBallsDropped', 0);
         this.set('totalMerges', 0);
         this.set('currentCombo', 0);
         this.increment('stats.gamesPlayed');
@@ -285,14 +285,14 @@ export class GameDataStore {
     }
     
     /**
-     * Record fruit merge
-     * @param {number} fruitIndex - Index of the fruit that was created
+     * Record ball merge
+     * @param {number} ballIndex - Index of the ball that was created
      */
-    recordMerge(fruitIndex) {
-        // Update merge count for specific fruit
-        const merges = this.get('fruitsMerged');
-        merges[fruitIndex] = (merges[fruitIndex] || 0) + 1;
-        this.set('fruitsMerged', [...merges]);
+    recordMerge(ballIndex) {
+        // Update merge count for specific ball
+        const merges = this.get('ballsMerged');
+        merges[ballIndex] = (merges[ballIndex] || 0) + 1;
+        this.set('ballsMerged', [...merges]);
         
         // Update total merges
         this.increment('totalMerges');

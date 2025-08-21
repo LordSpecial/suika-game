@@ -21,7 +21,7 @@ export class AudioSystem {
         // Get click sound
         this.sounds.click = this.resourceManager.getSound('click');
         
-        // Get pop sounds for all fruit sizes
+        // Get pop sounds for all ball sizes
         for (let i = 0; i < 11; i++) {
             this.sounds[`pop${i}`] = this.resourceManager.getSound(`pop${i}`);
         }

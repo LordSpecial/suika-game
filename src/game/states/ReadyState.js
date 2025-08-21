@@ -3,7 +3,7 @@ import { GAME_EVENTS } from '../../systems/EventSystem.js';
 import { GAME_CONFIG } from '../../utils/Config.js';
 
 /**
- * ReadyState - Ready to drop a fruit
+ * ReadyState - Ready to drop a ball
  */
 export class ReadyState extends GameState {
     constructor(game) {
@@ -20,7 +20,7 @@ export class ReadyState extends GameState {
             this.setupNewGame();
         } else {
             // Returning from drop state
-            this.prepareNextFruit();
+            this.prepareNextBall();
         }
         
         // Enable physics if needed
@@ -60,8 +60,8 @@ export class ReadyState extends GameState {
     
     handleInput(input) {
         if (input.type === 'drop' && this.game.elements.previewBall) {
-            // Drop the fruit
-            this.dropFruit();
+            // Drop the ball
+            this.dropBall();
             return { transition: 'DROP' };
         }
     }
@@ -95,7 +95,7 @@ export class ReadyState extends GameState {
         
         // Delay game interaction setup to avoid processing the start button click
         setTimeout(() => {
-            // Setup game interaction for dropping fruits
+            // Setup game interaction for dropping balls
             this.game.setupGameInteraction();
         }, 100);
         
@@ -103,7 +103,7 @@ export class ReadyState extends GameState {
         this.emit(GAME_EVENTS.GAME_START);
     }
     
-    prepareNextFruit() {
+    prepareNextBall() {
         // Re-add preview ball after drop timeout
         if (this.game.elements.previewBall) {
             this.game.physics.addBodies(this.game.elements.previewBall);
@@ -117,15 +117,15 @@ export class ReadyState extends GameState {
             this.game.elements.previewBall = null;
         }
         
-        // Initialize fruit queue for new game
-        this.game.gameFlowController.initializeFruitQueue();
+        // Initialize ball queue for new game
+        this.game.gameFlowController.initializeBallQueue();
         
         // Create preview ball
         const scaledBallHeight = this.game.scalingSystem.getScaledConstant('previewBallHeight');
-        const currentFruitSize = this.game.dataStore.get('currentFruitSize');
+        const currentBallSize = this.game.dataStore.get('currentBallSize');
         
-        this.game.elements.previewBall = this.game.fruitFactory.createPreviewFruit(
-            currentFruitSize,
+        this.game.elements.previewBall = this.game.ballFactory.createPreviewBall(
+            currentBallSize,
             this.game.gameWidth / 2,
             scaledBallHeight
         );
@@ -133,15 +133,15 @@ export class ReadyState extends GameState {
         this.game.physics.addBodies(this.game.elements.previewBall);
     }
     
-    dropFruit() {
+    dropBall() {
         if (!this.game.elements.previewBall) return;
         
         const ball = this.game.elements.previewBall;
-        const currentFruitSize = this.game.dataStore.get('currentFruitSize');
+        const currentBallSize = this.game.dataStore.get('currentBallSize');
         
-        // Create actual fruit at preview position
-        const droppedFruit = this.game.fruitFactory.createDroppedFruit(
-            currentFruitSize,
+        // Create actual ball at preview position
+        const droppedBall = this.game.ballFactory.createDroppedBall(
+            currentBallSize,
             ball.position.x,
             ball.position.y,
             this.game.getCurrentPhysicsOverrides()
@@ -151,25 +151,25 @@ export class ReadyState extends GameState {
         this.game.physics.removeBodies(ball);
         this.game.elements.previewBall = null;
         
-        // Add dropped fruit
-        this.game.physics.addBodies(droppedFruit);
+        // Add dropped ball
+        this.game.physics.addBodies(droppedBall);
         
         // Play drop sound
         this.game.playSound('click');
         
-        // Emit fruit drop event
-        this.emit(GAME_EVENTS.FRUIT_DROP, {
-            size: this.game.dataStore.get('currentFruitSize'),
-            position: { x: droppedFruit.position.x, y: droppedFruit.position.y }
+        // Emit ball drop event
+        this.emit(GAME_EVENTS.BALL_DROP, {
+            size: this.game.dataStore.get('currentBallSize'),
+            position: { x: droppedBall.position.x, y: droppedBall.position.y }
         });
         
-        // Advance the fruit queue: next becomes current, generate new next
-        const newNextSize = this.game.gameFlowController.advanceFruitQueue();
+        // Advance the ball queue: next becomes current, generate new next
+        const newNextSize = this.game.gameFlowController.advanceBallQueue();
         
-        // Immediately update next fruit UI to show the new next fruit
-        if (this.game.fruitFactory) {
-            const nextFruitData = this.game.fruitFactory.getFruitData(newNextSize);
-            this.game.uiController.updateNextFruit(nextFruitData);
+        // Immediately update next ball UI to show the new next ball
+        if (this.game.ballFactory) {
+            const nextBallData = this.game.ballFactory.getBallData(newNextSize);
+            this.game.uiController.updateNextBall(nextBallData);
         }
     }
     
@@ -183,14 +183,14 @@ export class ReadyState extends GameState {
             // Skip static bodies (walls) and preview balls
             if (body.isStatic || body === this.game.elements.previewBall) continue;
             
-            // Skip if body doesn't have a sizeIndex (not a fruit)
+            // Skip if body doesn't have a sizeIndex (not a ball)
             if (body.sizeIndex === undefined) continue;
             
-            // Check if any part of the fruit is above the lose line
-            const fruitTop = body.position.y - body.circleRadius;
+            // Check if any part of the ball is above the lose line
+            const ballTop = body.position.y - body.circleRadius;
             
-            // Game over: 80% of fruit above the line with upward velocity
-            const twentyPercentFromTop = fruitTop + (body.circleRadius * 2 * 0.2);
+            // Game over: 80% of ball above the line with upward velocity
+            const twentyPercentFromTop = ballTop + (body.circleRadius * 2 * 0.2);
             if (twentyPercentFromTop < scaledLoseHeight && body.velocity.y < 0) {
                 return { transition: 'LOSE' };
             }

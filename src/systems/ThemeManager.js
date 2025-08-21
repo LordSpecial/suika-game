@@ -181,11 +181,11 @@ export class ThemeManager {
         
         this.currentBallTheme = theme;
         
-        // Update fruit images in config
-        if (GAME_CONFIG.FRUITS && theme.items) {
+        // Update ball images in config
+        if (GAME_CONFIG.BALLS && theme.items) {
             theme.items.forEach((item, index) => {
-                if (GAME_CONFIG.FRUITS[index]) {
-                    GAME_CONFIG.FRUITS[index].img = item.img;
+                if (GAME_CONFIG.BALLS[index]) {
+                    GAME_CONFIG.BALLS[index].img = item.img;
                 }
             });
         }

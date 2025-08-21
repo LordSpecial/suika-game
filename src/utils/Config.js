@@ -39,7 +39,7 @@ export const GAME_CONFIG = {
             endModalPadding2: 16
         },
         sizes: {
-            nextFruitIcon: 24,
+            nextBallIcon: 24,
             endModalBorderRadius: 32,
             endModalBorderWidth: 5,
             endLinkBorderRadius: 16
@@ -48,7 +48,7 @@ export const GAME_CONFIG = {
     
     MENU: {
         backgroundSize: 512,
-        fruitRadius: 48,
+        ballRadius: 48,
         circleRadius: 192,
         startButtonWidth: 512,
         startButtonHeight: 96,
@@ -59,11 +59,11 @@ export const GAME_CONFIG = {
     GAMEPLAY: {
         loseHeight: 84,
         previewBallHeight: 32,
-        maxDropableSize: 5,  // max fruit size that can be dropped
-        dropTimeoutFrames: 30 // frames before next fruit can be dropped (30 frames = 0.5s at 60fps)
+        maxDropableSize: 5,  // max ball size that can be dropped
+        dropTimeoutFrames: 30 // frames before next ball can be dropped (30 frames = 0.5s at 60fps)
     },
     
-    FRUITS: [
+    BALLS: [
         { radius: 30,  scoreValue: 1,  img: './assets/img/realFruits/1_blueberry.png',    imgSize: 780 },
         { radius: 40,  scoreValue: 3,  img: './assets/img/realFruits/2_strawberry.png',   imgSize: 780 },
         { radius: 50,  scoreValue: 6,  img: './assets/img/realFruits/3_passionfruit.png', imgSize: 780 },
@@ -226,9 +226,9 @@ export const GAME_CONFIG = {
     
     PHYSICS_PRESETS: {
         BOUNCINESS: [
-            { restitution: 0.05, name: 'Low' },     // Very low bounce - fruits settle quickly
+            { restitution: 0.05, name: 'Low' },     // Very low bounce - balls settle quickly
             { restitution: 0.2, name: 'Medium' },   // Default/Medium bounce (unchanged)
-            { restitution: 0.6, name: 'High' }      // Very bouncy - fruits bounce a lot
+            { restitution: 0.6, name: 'High' }      // Very bouncy - balls bounce a lot
         ],
         GRAVITY: [
             { scale: 0.0003, name: 'Low' },    // Light gravity - floaty
@@ -236,9 +236,9 @@ export const GAME_CONFIG = {
             { scale: 0.003, name: 'High' }     // Heavy gravity - noticeably faster
         ],
         FRICTION: [
-            { friction: 0.1, frictionStatic: 0.1, name: 'Low' },     // Very slippery - fruits slide a lot
+            { friction: 0.1, frictionStatic: 0.1, name: 'Low' },     // Very slippery - balls slide a lot
             { friction: 0.8, frictionStatic: 0.8, name: 'Medium' },  // Default/Medium (unchanged)
-            { friction: 1.5, frictionStatic: 1.5, name: 'High' }     // Very grippy - fruits stick strongly
+            { friction: 1.5, frictionStatic: 1.5, name: 'High' }     // Very grippy - balls stick strongly
         ]
     }
 };

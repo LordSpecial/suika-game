@@ -174,20 +174,20 @@ export class AudioSystem {
 - **Benefits**: Testable scoring, achievement support
 ```javascript
 export class ScoringSystem {
-    calculateMergeScore(fruitIndex) { /* ... */ }
+    calculateMergeScore(ballIndex) { /* ... */ }
     updateHighscore(score) { /* ... */ }
     getMultiplier() { /* ... */ }
 }
 ```
 
-#### Step 3.3: Extract Fruit Factory
-- **File**: `src/entities/FruitFactory.js`
-- **Purpose**: Create and manage fruit entities
-- **Benefits**: Centralised fruit creation, theme support
+#### Step 3.3: Extract Ball Factory
+- **File**: `src/entities/BallFactory.js`
+- **Purpose**: Create and manage ball entities
+- **Benefits**: Centralised ball creation, theme support
 ```javascript
-export class FruitFactory {
+export class BallFactory {
     constructor(physics, scalingSystem, themeManager) { /* ... */ }
-    createFruit(type, x, y) { /* ... */ }
+    createBall(type, x, y) { /* ... */ }
     createMergeEffect(x, y, radius) { /* ... */ }
 }
 ```
@@ -294,7 +294,7 @@ export class InputManager {
 ### Week 3: Core Systems
 - [ ] Audio System
 - [ ] Scoring System
-- [ ] Fruit Factory
+- [ ] Ball Factory
 
 ### Week 4: UI Refactoring
 - [ ] UI Component base

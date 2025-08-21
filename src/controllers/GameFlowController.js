@@ -60,11 +60,11 @@ export class GameFlowController {
             this.game.uiController.updateHighscore(newHighscore);
         });
         
-        // Subscribe to next fruit changes
-        this.game.dataStore.subscribe('nextFruitSize', (size) => {
-            if (this.game.fruitFactory) {
-                const fruitData = this.game.fruitFactory.getFruitData(size);
-                this.game.uiController.updateNextFruit(fruitData);
+        // Subscribe to next ball changes
+        this.game.dataStore.subscribe('nextBallSize', (size) => {
+            if (this.game.ballFactory) {
+                const ballData = this.game.ballFactory.getBallData(size);
+                this.game.uiController.updateNextBall(ballData);
             }
         });
     }
@@ -124,9 +124,9 @@ export class GameFlowController {
     }
     
     /**
-     * Add fruit to the game
+     * Add ball to the game
      */
-    addFruit(x) {
+    addBall(x) {
         if (!this.game.stateMachine.isInState('READY')) return;
         
         // Let the state handle the drop
@@ -149,40 +149,40 @@ export class GameFlowController {
     }
     
     /**
-     * Initialize fruit queue for new game
+     * Initialize ball queue for new game
      */
-    initializeFruitQueue() {
+    initializeBallQueue() {
         const maxDropableSize = GAME_CONFIG.GAMEPLAY.maxDropableSize;
         
-        // Generate first current and next fruits randomly
-        this.game.dataStore.set('currentFruitSize', Math.floor(Math.random() * maxDropableSize));
-        this.game.dataStore.set('nextFruitSize', Math.floor(Math.random() * maxDropableSize));
+        // Generate first current and next balls randomly
+        this.game.dataStore.set('currentBallSize', Math.floor(Math.random() * maxDropableSize));
+        this.game.dataStore.set('nextBallSize', Math.floor(Math.random() * maxDropableSize));
     }
     
     /**
-     * Advance fruit queue - move next to current, generate new next
+     * Advance ball queue - move next to current, generate new next
      */
-    advanceFruitQueue() {
+    advanceBallQueue() {
         const maxDropableSize = GAME_CONFIG.GAMEPLAY.maxDropableSize;
         
-        // Move next fruit to current position
-        const previousNext = this.game.dataStore.get('nextFruitSize');
-        this.game.dataStore.set('currentFruitSize', previousNext);
+        // Move next ball to current position
+        const previousNext = this.game.dataStore.get('nextBallSize');
+        this.game.dataStore.set('currentBallSize', previousNext);
         
-        // Generate new random next fruit
+        // Generate new random next ball
         const newNext = Math.floor(Math.random() * maxDropableSize);
-        this.game.dataStore.set('nextFruitSize', newNext);
+        this.game.dataStore.set('nextBallSize', newNext);
         
-        // Return the new next fruit size for immediate UI update
+        // Return the new next ball size for immediate UI update
         return newNext;
     }
     
     /**
-     * Set next fruit size (deprecated - use initializeFruitQueue or advanceFruitQueue)
+     * Set next ball size (deprecated - use initializeBallQueue or advanceBallQueue)
      */
-    setNextFruitSize() {
+    setNextBallSize() {
         // Maintain backwards compatibility
-        this.initializeFruitQueue();
+        this.initializeBallQueue();
     }
     
     /**
@@ -216,7 +216,7 @@ export class GameFlowController {
      */
     async saveHighscore(score) {
         try {
-            await database.saveScore({ score, duration: 0, fruitsUsed: 0 });
+            await database.saveScore({ score, duration: 0, ballsUsed: 0 });
             this.game.dataStore.set('highscore', score);
             
             // Update UI
@@ -256,14 +256,14 @@ export class GameFlowController {
             // Skip static bodies (walls) and preview balls
             if (body.isStatic || body === this.game.elements.previewBall) continue;
             
-            // Skip if body doesn't have a sizeIndex (not a fruit)
+            // Skip if body doesn't have a sizeIndex (not a ball)
             if (body.sizeIndex === undefined) continue;
             
-            // Check if any part of the fruit is above the lose line
-            const fruitTop = body.position.y - body.circleRadius;
+            // Check if any part of the ball is above the lose line
+            const ballTop = body.position.y - body.circleRadius;
             
-            // Game over: 80% of fruit above the line with upward velocity
-            const twentyPercentFromTop = fruitTop + (body.circleRadius * 2 * 0.2);
+            // Game over: 80% of ball above the line with upward velocity
+            const twentyPercentFromTop = ballTop + (body.circleRadius * 2 * 0.2);
             if (twentyPercentFromTop < scaledLoseHeight && body.velocity.y < 0) {
                 this.loseGame();
                 return;

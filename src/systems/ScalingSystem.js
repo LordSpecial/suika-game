@@ -4,7 +4,7 @@ export class ScalingSystem {
     constructor(settings) {
         this.gameScale = 1;
         this.scaledConstants = {};
-        this.baseFruitSizes = null;
+        this.baseBallSizes = null;
         this.settings = settings;
     }
     
@@ -65,7 +65,7 @@ export class ScalingSystem {
         
         // Scale menu constants
         this.scaledConstants.menuBgSize = MENU.backgroundSize * this.gameScale;
-        this.scaledConstants.menuFruitRadius = MENU.fruitRadius * this.gameScale;
+        this.scaledConstants.menuBallRadius = MENU.ballRadius * this.gameScale;
         this.scaledConstants.menuCircleRadius = MENU.circleRadius * this.gameScale;
         this.scaledConstants.startButtonWidth = MENU.startButtonWidth * this.gameScale;
         this.scaledConstants.startButtonHeight = MENU.startButtonHeight * this.gameScale;
@@ -74,22 +74,22 @@ export class ScalingSystem {
     }
     
     /**
-     * Scale fruit sizes proportionally
+     * Scale ball sizes proportionally
      */
-    scaleFruits(fruits, forceReset = false) {
-        // Reset cache if forced or if the fruit count has changed (indicating theme change)
-        if (!this.baseFruitSizes || forceReset || this.baseFruitSizes.length !== fruits.length) {
-            this.baseFruitSizes = fruits.map(fruit => ({ ...fruit }));
+    scaleBalls(balls, forceReset = false) {
+        // Reset cache if forced or if the ball count has changed (indicating theme change)
+        if (!this.baseBallSizes || forceReset || this.baseBallSizes.length !== balls.length) {
+            this.baseBallSizes = balls.map(ball => ({ ...ball }));
         }
         
         // Get ball size multiplier from settings
         const ballSizeMultiplier = this.settings ? this.settings.getBallSizeMultiplier() : 1.0;
         
-        // Always use the provided fruits for image data, but preserve cached sizes
-        return fruits.map((fruit, index) => ({
-            ...fruit,
-            radius: fruit.radius * this.gameScale * ballSizeMultiplier,
-            scale: (fruit.radius * this.gameScale * ballSizeMultiplier * 2) / fruit.imgSize,
+        // Always use the provided balls for image data, but preserve cached sizes
+        return balls.map((ball, index) => ({
+            ...ball,
+            radius: ball.radius * this.gameScale * ballSizeMultiplier,
+            scale: (ball.radius * this.gameScale * ballSizeMultiplier * 2) / ball.imgSize,
             sizeIndex: index
         }));
     }
@@ -139,11 +139,11 @@ export class ScalingSystem {
             statusBar.style.height = `${this.scaledConstants.statusBarHeight}px`;
         }
         
-        // Scale next fruit image
-        const nextFruitImg = document.getElementById('game-next-fruit');
-        if (nextFruitImg) {
-            nextFruitImg.style.width = `${sizes.nextFruitIcon * this.gameScale}px`;
-            nextFruitImg.style.height = `${sizes.nextFruitIcon * this.gameScale}px`;
+        // Scale next ball image
+        const nextBallImg = document.getElementById('game-next-ball');
+        if (nextBallImg) {
+            nextBallImg.style.width = `${sizes.nextBallIcon * this.gameScale}px`;
+            nextBallImg.style.height = `${sizes.nextBallIcon * this.gameScale}px`;
         }
         
         // Scale game end modal elements

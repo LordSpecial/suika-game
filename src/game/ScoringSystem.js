@@ -19,20 +19,20 @@ export class ScoringSystem {
      * Setup data store subscriptions
      */
     setupSubscriptions() {
-        // Listen for fruit merges to calculate scores
-        this.dataStore.subscribe('fruitsMerged', () => {
+        // Listen for ball merges to calculate scores
+        this.dataStore.subscribe('ballsMerged', () => {
             this.calculateScore();
         });
     }
     
     /**
-     * Calculate total score based on merged fruits
+     * Calculate total score based on merged balls
      * @returns {number} The calculated score
      */
     calculateScore() {
-        const fruitsMerged = this.dataStore.get('fruitsMerged');
-        const score = fruitsMerged.reduce((total, count, sizeIndex) => {
-            const value = GAME_CONFIG.FRUITS[sizeIndex].scoreValue * count;
+        const ballsMerged = this.dataStore.get('ballsMerged');
+        const score = ballsMerged.reduce((total, count, sizeIndex) => {
+            const value = GAME_CONFIG.BALLS[sizeIndex].scoreValue * count;
             return total + value;
         }, 0);
         
@@ -43,34 +43,32 @@ export class ScoringSystem {
     }
     
     /**
-     * Record a fruit merge and update score
-     * @param {number} fruitIndex - The index of the merged fruit
-     */
-    recordMerge(fruitIndex) {
+     * Record a ball merge and update score
+     * @param {number} ballIndex - The index of the merged ball */
+    recordMerge(ballIndex) {
         // Record the merge in data store
-        this.dataStore.recordMerge(fruitIndex);
+        this.dataStore.recordMerge(ballIndex);
         
         // Calculate new score
         const newScore = this.calculateScore();
         
         // Check for achievements or milestones
-        this.checkAchievements(fruitIndex, newScore);
+        this.checkAchievements(ballIndex, newScore);
         
         // Emit scoring event for UI updates or effects
         this.eventSystem.emit('score:merge', { 
-            fruitIndex, 
+            ballIndex, 
             newScore,
-            points: GAME_CONFIG.FRUITS[fruitIndex].scoreValue
+            points: GAME_CONFIG.BALLS[ballIndex].scoreValue
         });
     }
     
     /**
-     * Get score for a specific fruit merge
-     * @param {number} fruitIndex - The fruit index
-     * @returns {number} Points for this fruit
-     */
-    getFruitScore(fruitIndex) {
-        return GAME_CONFIG.FRUITS[fruitIndex]?.scoreValue || 0;
+     * Get score for a specific ball merge
+     * @param {number} ballIndex - The ball index
+     * @returns {number} Points for this ball */
+    getBallScore(ballIndex) {
+        return GAME_CONFIG.BALLS[ballIndex]?.scoreValue || 0;
     }
     
     /**
@@ -94,13 +92,13 @@ export class ScoringSystem {
     }
     
     /**
-     * Check for achievements based on fruit merge
-     * @param {number} fruitIndex - The merged fruit index
+     * Check for achievements based on ball merge
+     * @param {number} ballIndex - The merged ball index
      * @param {number} score - Current score
      */
-    checkAchievements(fruitIndex, score) {
+    checkAchievements(ballIndex, score) {
         // Check if player reached the watermelon
-        if (fruitIndex === GAME_CONFIG.FRUITS.length - 1) {
+        if (ballIndex === GAME_CONFIG.BALLS.length - 1) {
             this.eventSystem.emit('achievement:watermelon', { score });
         }
         
@@ -130,7 +128,7 @@ export class ScoringSystem {
             currentScore: this.dataStore.get('score'),
             highScore: this.dataStore.get('highscore'),
             totalMerges: this.dataStore.get('totalMerges'),
-            fruitsMerged: this.dataStore.get('fruitsMerged'),
+            ballsMerged: this.dataStore.get('ballsMerged'),
             currentCombo: this.dataStore.get('currentCombo'),
             bestCombo: this.dataStore.get('stats.bestCombo')
         };

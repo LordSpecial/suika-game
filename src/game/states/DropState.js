@@ -2,7 +2,7 @@ import { GameState } from './GameState.js';
 import { GAME_CONFIG } from '../../utils/Config.js';
 
 /**
- * DropState - Fruit has been dropped, waiting for timeout
+ * DropState - Ball has been dropped, waiting for timeout
  */
 export class DropState extends GameState {
     constructor(game) {
@@ -60,15 +60,15 @@ export class DropState extends GameState {
             this.game.elements.previewBall = null;
         }
         
-        // The fruit queue will be advanced when transitioning back to READY
-        // For now, just use the current fruit size for the preview ball
+        // The ball queue will be advanced when transitioning back to READY
+        // For now, just use the current ball size for the preview ball
         
         // Create preview ball but don't add it to physics yet
         const scaledBallHeight = this.game.scalingSystem.getScaledConstant('previewBallHeight');
-        const currentFruitSize = this.game.dataStore.get('currentFruitSize');
+        const currentBallSize = this.game.dataStore.get('currentBallSize');
         
-        this.game.elements.previewBall = this.game.fruitFactory.createPreviewFruit(
-            currentFruitSize,
+        this.game.elements.previewBall = this.game.ballFactory.createPreviewBall(
+            currentBallSize,
             this.game.gameWidth / 2,
             scaledBallHeight
         );
@@ -86,14 +86,14 @@ export class DropState extends GameState {
             // Skip static bodies (walls) and preview balls
             if (body.isStatic || body === this.game.elements.previewBall) continue;
             
-            // Skip if body doesn't have a sizeIndex (not a fruit)
+            // Skip if body doesn't have a sizeIndex (not a ball)
             if (body.sizeIndex === undefined) continue;
             
-            // Check if any part of the fruit is above the lose line
-            const fruitTop = body.position.y - body.circleRadius;
+            // Check if any part of the ball is above the lose line
+            const ballTop = body.position.y - body.circleRadius;
             
-            // Game over: 80% of fruit above the line with upward velocity
-            const twentyPercentFromTop = fruitTop + (body.circleRadius * 2 * 0.2);
+            // Game over: 80% of ball above the line with upward velocity
+            const twentyPercentFromTop = ballTop + (body.circleRadius * 2 * 0.2);
             if (twentyPercentFromTop < scaledLoseHeight && body.velocity.y < 0) {
                 return { transition: 'LOSE' };
             }

@@ -164,12 +164,12 @@ export class Physics {
     }
     
     /**
-     * Create a fruit physics body
+     * Create a ball physics body
      */
-    createFruit(x, y, fruitData, extraConfig = {}, physicsOverrides = {}) {
+    createBall(x, y, ballData, extraConfig = {}, physicsOverrides = {}) {
         const { PHYSICS } = GAME_CONFIG;
         
-        const circle = Matter.Bodies.circle(x, y, fruitData.radius, {
+        const circle = Matter.Bodies.circle(x, y, ballData.radius, {
             friction: physicsOverrides.friction || PHYSICS.friction,
             frictionStatic: physicsOverrides.frictionStatic || PHYSICS.frictionStatic,
             frictionAir: PHYSICS.frictionAir,
@@ -177,15 +177,15 @@ export class Physics {
             ...extraConfig,
             render: { 
                 sprite: { 
-                    texture: fruitData.img, 
-                    xScale: fruitData.scale, 
-                    yScale: fruitData.scale 
+                    texture: ballData.img, 
+                    xScale: ballData.scale, 
+                    yScale: ballData.scale 
                 } 
             }
         });
         
         // Add custom properties
-        circle.sizeIndex = fruitData.sizeIndex || 0;
+        circle.sizeIndex = ballData.sizeIndex || 0;
         circle.popped = false;
         
         return circle;

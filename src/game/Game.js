@@ -4,7 +4,7 @@ import { Settings } from '../systems/Settings.js';
 import { Physics } from './Physics.js';
 import { Menu } from '../entities/Menu.js';
 import { SettingsMenu } from '../entities/SettingsMenu.js';
-import { FruitFactory } from '../entities/FruitFactory.js';
+import { BallFactory } from '../entities/BallFactory.js';
 import { eventSystem, GAME_EVENTS } from '../systems/EventSystem.js';
 import { ResourceManager } from '../systems/ResourceManager.js';
 import { AudioSystem } from '../systems/AudioSystem.js';
@@ -46,8 +46,8 @@ export class Game {
         // Initialize scoring system
         this.scoringSystem = new ScoringSystem(this.eventSystem, this.dataStore);
         
-        // Initialize fruit factory
-        this.fruitFactory = new FruitFactory(this.physics, this.scalingSystem, this.resourceManager, this.eventSystem, this.settings);
+        // Initialize ball factory
+        this.ballFactory = new BallFactory(this.physics, this.scalingSystem, this.resourceManager, this.eventSystem, this.settings);
         
         // Initialize controllers
         this.renderingController = new RenderingController(this);
@@ -72,7 +72,7 @@ export class Game {
             end: document.getElementById('game-end-container'),
             endTitle: document.getElementById('game-end-title'),
             statusValue: document.getElementById('game-highscore-value'),
-            nextFruitImg: document.getElementById('game-next-fruit'),
+            nextBallImg: document.getElementById('game-next-ball'),
             previewBall: null,
         };
         
@@ -136,7 +136,7 @@ export class Game {
     startSettingsRendering() { return this.renderingController.startSettingsRendering(); }
     stopSettingsRendering() { return this.renderingController.stopSettingsRendering(); }
     renderHomeButton(ctx) { return this.renderingController.renderHomeButton(ctx); }
-    updateScoreOpacity(fruitX) { return this.renderingController.updateScoreOpacity(fruitX); }
+    updateScoreOpacity(ballX) { return this.renderingController.updateScoreOpacity(ballX); }
     setupMenuInteraction() { return this.inputController.setupMenuInteraction(); }
     setupGameInteraction() { return this.inputController.setupGameInteraction(); }
     removeMenuEventListeners() { return this.inputController.removeMenuEventListeners(); }
@@ -146,8 +146,8 @@ export class Game {
     recreateWalls() { return this.physicsController.recreateWalls(); }
     setupCollisionDetection() { return this.physicsController.setupCollisionDetection(); }
     getCurrentPhysicsOverrides() { return this.physicsController.getCurrentPhysicsOverrides(); }
-    updateExistingFruits() { return this.themeController.updateExistingFruits(); }
-    logFruitVelocity(fruit) { return this.physicsController.logFruitVelocity(fruit); }
+    updateExistingBalls() { return this.themeController.updateExistingBalls(); }
+    logBallVelocity(ball) { return this.physicsController.logBallVelocity(ball); }
     updateUI() { return this.uiController.updateUI(); }
     centerGame() { return this.uiController.centerGame(); }
     setupTryAgainButton() { return this.uiController.setupTryAgainButton(); }
@@ -158,9 +158,9 @@ export class Game {
     openSettings() { return this.gameFlowController.openSettings(); }
     closeSettings() { return this.gameFlowController.closeSettings(); }
     toggleMute() { return this.gameFlowController.toggleMute(); }
-    addFruit(x) { return this.gameFlowController.addFruit(x); }
+    addBall(x) { return this.gameFlowController.addBall(x); }
     loseGame() { return this.gameFlowController.loseGame(); }
-    setNextFruitSize() { return this.gameFlowController.setNextFruitSize(); }
+    setNextBallSize() { return this.gameFlowController.setNextBallSize(); }
     calculateScore() { return this.gameFlowController.calculateScore(); }
     loadHighscore() { return this.gameFlowController.loadHighscore(); }
     saveHighscore(score) { return this.gameFlowController.saveHighscore(score); }
@@ -168,7 +168,7 @@ export class Game {
     checkGameOverConditions() { return this.gameFlowController.checkGameOverConditions(); }
     applyThemeChanges() { return this.themeController.applyThemeChanges(); }
     applyPhysicsChanges() { return this.themeController.applyPhysicsChanges(); }
-    updateFruitTheme(ballTheme) { return this.themeController.updateFruitTheme(ballTheme); }
+    updateBallTheme(ballTheme) { return this.themeController.updateBallTheme(ballTheme); }
     updateBackgroundTheme(backgroundTheme) { return this.themeController.updateBackgroundTheme(backgroundTheme); }
     updateSoundsTheme(soundTheme) { return this.themeController.updateSoundsTheme(soundTheme); }
     
@@ -196,9 +196,9 @@ export class Game {
         // Update scaling
         this.scalingSystem.updateScaling(this.gameWidth, this.gameHeight);
         
-        // Update fruit factory scaling
-        if (this.fruitFactory) {
-            this.fruitFactory.updateScaledFruits();
+        // Update ball factory scaling
+        if (this.ballFactory) {
+            this.ballFactory.updateScaledBalls();
         }
         
         // Update physics dimensions

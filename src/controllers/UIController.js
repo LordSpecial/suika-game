@@ -19,7 +19,7 @@ export class UIController {
         
         // Add any missing elements
         this.elements.statusBar = document.getElementById('game-status');
-        this.elements.nextFruit = document.querySelector('.game-status-item:nth-child(2)');
+        this.elements.nextBall = document.querySelector('.game-status-item:nth-child(2)');
         this.elements.tryAgain = document.getElementById('game-end-link');
         this.elements.endScore = null; // Not in current HTML
         this.elements.homeButton = null; // Not in current HTML
@@ -100,11 +100,11 @@ export class UIController {
     }
     
     /**
-     * Update next fruit display
+     * Update next ball display
      */
-    updateNextFruit(fruitData) {
-        if (this.elements.nextFruitImg && fruitData) {
-            this.elements.nextFruitImg.src = fruitData.img;
+    updateNextBall(ballData) {
+        if (this.elements.nextBallImg && ballData) {
+            this.elements.nextBallImg.src = ballData.img;
         }
     }
     

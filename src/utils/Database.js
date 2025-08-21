@@ -7,7 +7,7 @@
 export class Database {
     constructor() {
         this.storageKey = 'suika-game-highscores';
-        this.csvHeaders = ['timestamp', 'score', 'duration', 'fruitsUsed'];
+        this.csvHeaders = ['timestamp', 'score', 'duration', 'ballsUsed'];
     }
     
     /**
@@ -20,7 +20,7 @@ export class Database {
                 timestamp: new Date().toISOString(),
                 score: scoreData.score,
                 duration: scoreData.duration || 0,
-                fruitsUsed: scoreData.fruitsUsed || 0
+                ballsUsed: scoreData.ballsUsed || 0
             };
             
             scores.push(newEntry);
@@ -94,7 +94,7 @@ export class Database {
                     score.timestamp,
                     score.score,
                     score.duration,
-                    score.fruitsUsed
+                    score.ballsUsed
                 ].join(','))
             ].join('\n');
             
@@ -155,7 +155,7 @@ export class Database {
                     timestamp: values[0],
                     score: parseInt(values[1]) || 0,
                     duration: parseInt(values[2]) || 0,
-                    fruitsUsed: parseInt(values[3]) || 0
+                    ballsUsed: parseInt(values[3]) || 0
                 };
                 
                 scores.push(scoreEntry);

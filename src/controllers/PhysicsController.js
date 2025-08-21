@@ -113,8 +113,7 @@ export class PhysicsController {
                 // Skip if already popped
                 if (bodyA.popped || bodyB.popped) continue;
                 
-                // Skip the largest fruit
-                if (bodyA.sizeIndex >= this.game.fruitFactory.scaledFruits.length - 1) continue;
+                // Skip the largest ball if (bodyA.sizeIndex >= this.game.ballFactory.scaledBalls.length - 1) continue;
                 
                 // Mark as popped to prevent double processing
                 bodyA.popped = true;
@@ -124,22 +123,22 @@ export class PhysicsController {
                 const midX = (bodyA.position.x + bodyB.position.x) / 2;
                 const midY = (bodyA.position.y + bodyB.position.y) / 2;
                 
-                // Create merged fruit through FruitFactory
-                const mergedFruit = this.game.fruitFactory.createMergedFruit(
+                // Create merged ball through BallFactory
+                const mergedBall = this.game.ballFactory.createMergedBall(
                     bodyA, 
                     bodyB, 
                     bodyA.sizeIndex + 1,
                     this.getCurrentPhysicsOverrides()
                 );
                 
-                // Remove the old fruits from physics world
+                // Remove the old balls from physics world
                 this.game.physics.removeBodies([bodyA, bodyB]);
                 
-                // Add the merged fruit to physics world
-                this.game.physics.addBodies(mergedFruit);
+                // Add the merged ball to physics world
+                this.game.physics.addBodies(mergedBall);
                 
                 // Add pop effect at the merged position  
-                this.game.fruitFactory.createMergeEffect(midX, midY, mergedFruit.circleRadius);
+                this.game.ballFactory.createMergeEffect(midX, midY, mergedBall.circleRadius);
                 
                 // Play merge sound
                 this.game.audioSystem.play(`pop${bodyA.sizeIndex}`);
@@ -148,7 +147,7 @@ export class PhysicsController {
                 this.game.scoringSystem.recordMerge(bodyA.sizeIndex + 1);
                 
                 // Log for debugging
-                this.logFruitVelocity(mergedFruit);
+                this.logBallVelocity(mergedBall);
             }
         });
     }
@@ -174,12 +173,12 @@ export class PhysicsController {
         // Get current physics overrides  
         const overrides = this.getCurrentPhysicsOverrides();
         
-        // Update existing fruits
-        this.updateExistingFruits(overrides);
+        // Update existing balls
+        this.updateExistingBalls(overrides);
         
-        // Update fruit factory's scaled fruits if ball size changed
-        if (this.game.fruitFactory) {
-            this.game.fruitFactory.updateScaledFruits();
+        // Update ball factory's scaled balls if ball size changed
+        if (this.game.ballFactory) {
+            this.game.ballFactory.updateScaledBalls();
         }
         
         // Recreate walls to ensure they're properly positioned
@@ -187,9 +186,9 @@ export class PhysicsController {
     }
     
     /**
-     * Update existing fruits with new physics settings
+     * Update existing balls with new physics settings
      */
-    updateExistingFruits(physicsOverrides) {
+    updateExistingBalls(physicsOverrides) {
         const bodies = this.game.physics.engine.world.bodies;
         const ballSizeMultiplier = this.game.settings.getBallSizeMultiplier();
         
@@ -211,17 +210,17 @@ export class PhysicsController {
                 body.frictionStatic = physicsOverrides.frictionStatic;
             }
             
-            // Update size if it's a fruit (has sizeIndex)
-            if (body.sizeIndex !== undefined && this.game.fruitFactory) {
-                const fruitData = this.game.fruitFactory.getFruitData(body.sizeIndex);
-                if (fruitData) {
+            // Update size if it's a ball (has sizeIndex)
+            if (body.sizeIndex !== undefined && this.game.ballFactory) {
+                const ballData = this.game.ballFactory.getBallData(body.sizeIndex);
+                if (ballData) {
                     // Update the body's scale for rendering
-                    Matter.Body.scale(body, fruitData.radius / body.circleRadius, fruitData.radius / body.circleRadius);
+                    Matter.Body.scale(body, ballData.radius / body.circleRadius, ballData.radius / body.circleRadius);
                     
                     // Update render sprite scale
                     if (body.render && body.render.sprite) {
-                        body.render.sprite.xScale = fruitData.scale;
-                        body.render.sprite.yScale = fruitData.scale;
+                        body.render.sprite.xScale = ballData.scale;
+                        body.render.sprite.yScale = ballData.scale;
                     }
                 }
             }
@@ -241,10 +240,10 @@ export class PhysicsController {
     }
     
     /**
-     * Log fruit velocity for debugging
+     * Log ball velocity for debugging
      */
-    logFruitVelocity(fruit) {
-        const velocity = fruit.velocity;
+    logBallVelocity(ball) {
+        const velocity = ball.velocity;
         const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
         // Debug logging disabled in production
     }

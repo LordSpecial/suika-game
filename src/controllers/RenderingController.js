@@ -132,22 +132,22 @@ export class RenderingController {
     }
     
     /**
-     * Update score opacity based on fruit position
+     * Update score opacity based on ball position
      */
-    updateScoreOpacity(fruitX) {
+    updateScoreOpacity(ballX) {
         if (!this.game.elements.score) return;
         
         const thirtyPercent = this.game.gameWidth * 0.3;
         const fortyPercent = this.game.gameWidth * 0.4;
         
-        if (fruitX <= thirtyPercent) {
-            // Fruit is at 30% or less - minimum opacity of 5%
+        if (ballX <= thirtyPercent) {
+            // Ball is at 30% or less - minimum opacity of 5%
             this.game.elements.score.style.color = 'rgba(255, 238, 219, 0.05)'; // --col-bg-lighter with 5% opacity
             this.game.elements.score.style.textShadow = '3px 3px 0 rgba(255, 83, 0, 0.05), -3px -3px 0 rgba(255, 83, 0, 0.05), -3px 3px 0 rgba(255, 83, 0, 0.05), 3px -3px 0 rgba(255, 83, 0, 0.05)';
-        } else if (fruitX <= fortyPercent) {
-            // Fruit is between 30% and 40% - fade from 5% to 100%
+        } else if (ballX <= fortyPercent) {
+            // Ball is between 30% and 40% - fade from 5% to 100%
             const fadeZone = fortyPercent - thirtyPercent;
-            const positionInFade = fruitX - thirtyPercent;
+            const positionInFade = ballX - thirtyPercent;
             const fadeRatio = positionInFade / fadeZone;
             
             // Linear interpolation from 0.05 (5%) to 1.0 (100%)
@@ -155,7 +155,7 @@ export class RenderingController {
             this.game.elements.score.style.color = `rgba(255, 238, 219, ${opacity})`;
             this.game.elements.score.style.textShadow = `3px 3px 0 rgba(255, 83, 0, ${opacity}), -3px -3px 0 rgba(255, 83, 0, ${opacity}), -3px 3px 0 rgba(255, 83, 0, ${opacity}), 3px -3px 0 rgba(255, 83, 0, ${opacity})`;
         } else {
-            // Fruit is beyond 40% - full opacity, restore original colors
+            // Ball is beyond 40% - full opacity, restore original colors
             this.game.elements.score.style.color = 'var(--col-bg-lighter)';
             this.game.elements.score.style.textShadow = '3px 3px 0 var(--col-primary), -3px -3px 0 var(--col-primary), -3px 3px 0 var(--col-primary), 3px -3px 0 var(--col-primary)';
         }
