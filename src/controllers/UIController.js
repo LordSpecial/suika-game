@@ -21,8 +21,8 @@ export class UIController {
         this.elements.statusBar = document.getElementById('game-status');
         this.elements.nextBall = document.querySelector('.game-status-item:nth-child(2)');
         this.elements.tryAgain = document.getElementById('game-end-link');
+        this.elements.homeButton = document.getElementById('game-end-home');
         this.elements.endScore = null; // Not in current HTML
-        this.elements.homeButton = null; // Not in current HTML
         
         // Setup initial UI state
         this.hideEndModal();
@@ -137,23 +137,49 @@ export class UIController {
     }
     
     /**
-     * Setup try again button
+     * Setup game over buttons
      */
     setupTryAgainButton() {
+        this.setupEndButtons();
+    }
+
+    /**
+     * Setup end modal buttons (Try Again and Home)
+     */
+    setupEndButtons() {
+        // Setup Try Again button
         const tryAgainBtn = this.elements.tryAgain;
-        if (!tryAgainBtn) return;
-        
-        // Remove any existing listeners
-        const newTryAgainBtn = tryAgainBtn.cloneNode(true);
-        tryAgainBtn.parentNode.replaceChild(newTryAgainBtn, tryAgainBtn);
-        this.elements.tryAgain = newTryAgainBtn;
-        
-        // Add new listener
-        newTryAgainBtn.addEventListener('click', () => {
-            this.game.playSound('click');
-            this.hideEndModal();
-            this.game.stateMachine.transition('READY', { fromMenu: true });
-        });
+        if (tryAgainBtn) {
+            // Remove any existing listeners
+            const newTryAgainBtn = tryAgainBtn.cloneNode(true);
+            tryAgainBtn.parentNode.replaceChild(newTryAgainBtn, tryAgainBtn);
+            this.elements.tryAgain = newTryAgainBtn;
+            
+            // Add new listener
+            newTryAgainBtn.addEventListener('click', (event) => {
+                event.preventDefault(); // Prevent page reload from empty href
+                this.game.playSound('click');
+                this.hideEndModal();
+                this.game.stateMachine.transition('READY', { fromMenu: true });
+            });
+        }
+
+        // Setup Home button
+        const homeBtn = this.elements.homeButton;
+        if (homeBtn) {
+            // Remove any existing listeners
+            const newHomeBtn = homeBtn.cloneNode(true);
+            homeBtn.parentNode.replaceChild(newHomeBtn, homeBtn);
+            this.elements.homeButton = newHomeBtn;
+            
+            // Add new listener
+            newHomeBtn.addEventListener('click', (event) => {
+                event.preventDefault(); // Prevent page reload from empty href
+                this.game.playSound('click');
+                this.hideEndModal();
+                this.game.stateMachine.transition('MENU');
+            });
+        }
     }
     
     /**

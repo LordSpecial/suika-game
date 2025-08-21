@@ -130,16 +130,38 @@
       color: var(--col-primary-dark);
     }
 
+    #game-end-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+      margin-top: 16px;
+    }
+
+    #game-end-home,
     #game-end-link {
-      display: inline-block;
+      display: block;
       color: var(--col-white);
       font-size: 24px;
       text-decoration: none;
-      background-color: var(--col-primary-light);
-      margin-top: 16px;
-      padding: 16px;
+      padding: 16px 32px;
       border-radius: 16px;
       box-shadow: 4px 4px 0 var(--col-shadow);
+      width: 160px;
+      text-align: center;
+    }
+
+    #game-end-home {
+      background-color: #666;
+    }
+
+    #game-end-link {
+      background-color: var(--col-primary-light);
+    }
+
+    #game-end-home:hover {
+      background-color: #555;
+      box-shadow: 6px 6px 0 var(--col-shadow);
     }
 
     #game-end-link:hover {
@@ -192,7 +214,10 @@
         <div id="game-end-container">
           <div id="game-end">
             <div id="game-end-title">Game Over!</div>
-            <a id="game-end-link" href="">Try Again</a>
+            <div id="game-end-buttons">
+              <a id="game-end-home" href="">Home</a>
+              <a id="game-end-link" href="">Try Again</a>
+            </div>
           </div>
         </div>
 
