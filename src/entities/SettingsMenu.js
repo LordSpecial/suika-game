@@ -79,12 +79,12 @@ export class SettingsMenu {
         const viewportWidth = buttonWidth * 1.35; // Reduced from 1.5 to 1.35 (90% of previous)
         
         // Calculate content height with larger buttons and increased spacing
-        // 5 settings now: bounciness, gravity, friction, ballSize (4 standard) + ballWeight (2x2 grid with larger buttons)
+        // 6 settings now: bounciness, gravity, friction, ballSize (4 standard) + ballWeight (2x2 grid with larger buttons) + ballWeightRange (3 standard)
         // ballWeight needs extra space for the 2x2 grid layout and 30% larger buttons
         const standardSettingHeight = 160 * scale; // Standard setting with label + buttons + spacing
         const ballWeightButtonSize = 120 * scale * 1.3; // 30% larger buttons
         const ballWeightExtraHeight = (ballWeightButtonSize * 0.6) + 40 * scale; // Additional height for larger 2x2 grid + extra spacing
-        const physicsControlsHeight = 5 * standardSettingHeight + ballWeightExtraHeight + 80 * scale + (4 * 60 * scale); // 5 settings + extra for larger ballWeight + title spacing + 4 extra spacings
+        const physicsControlsHeight = 6 * standardSettingHeight + ballWeightExtraHeight + 80 * scale + (5 * 60 * scale); // 6 settings + extra for larger ballWeight + title spacing + 5 extra spacings
         const contentHeight = physicsControlsHeight;
         
         // Update scroll boundaries
@@ -171,10 +171,11 @@ export class SettingsMenu {
         
         let currentY = startY;
         
-        ['bounciness', 'gravity', 'friction', 'ballSize', 'ballWeight'].forEach(type => {
+        ['bounciness', 'gravity', 'friction', 'ballSize', 'ballWeight', 'ballWeightRange'].forEach(type => {
             // Label with outline
             const label = type === 'ballSize' ? 'Ball Size' : 
                          type === 'ballWeight' ? 'Ball Weight' : 
+                         type === 'ballWeightRange' ? 'Weight Range' :
                          type.charAt(0).toUpperCase() + type.slice(1);
             this.renderer.drawTextWithOutline(label, centerX, currentY, {
                 font: `700 ${32 * scale}px 'Azeret Mono', monospace`,  // Increased from 22 to 32
@@ -286,14 +287,14 @@ export class SettingsMenu {
             if (type === 'ballWeight') {
                 // 2x2 grid needs more vertical space, accounting for larger buttons
                 const ballWeightButtonSize = buttonSize * 1.3;
-                currentY += controlSpacing + (ballWeightButtonSize * 0.6); // Add extra space for second row and larger buttons
+                currentY += controlSpacing + (ballWeightButtonSize * 1.3); // Add extra space for second row and larger buttons (increased from 0.6 to 1.0)
             } else {
                 // Standard horizontal layout
                 currentY += controlSpacing;
             }
             
             // Add extra spacing between different physics settings
-            if (type !== 'ballWeight') {  // ballWeight is now the last setting
+            if (type !== 'ballWeightRange') {  // ballWeightRange is now the last setting
                 currentY += 60 * scale;  // Increased from 40 to 60 for even more spacing
             }
         });

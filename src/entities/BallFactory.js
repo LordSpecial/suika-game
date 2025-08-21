@@ -47,7 +47,14 @@ export class BallFactory {
      */
     calculateDensity(ballType) {
         const ballWeight = this.settings.getSetting('physics', 'ballWeight');
+        const ballWeightRange = this.settings.getSetting('physics', 'ballWeightRange') || 1; // Default to 1 if undefined
         const defaultDensity = 0.001; // Default Matter.js density
+        
+        // Get range multiplier: 0=narrow(0.5x), 1=default(1.0x), 2=wide(2.0x)
+        const rangeMultipliers = [0.5, 1.0, 2.0];
+        const rangeMultiplier = rangeMultipliers[ballWeightRange] || 1.0;
+        
+        let baseDensity;
         
         switch (ballWeight) {
             case 0: // Default - all balls same density
@@ -55,15 +62,24 @@ export class BallFactory {
                 
             case 1: // Reversed - smaller balls heavier, larger balls lighter (balanced symmetric)
                 // Pre-calculated balanced densities: 4x heavier to 4x lighter, symmetric around 1.0x
-                const reversedDensities = [0.004000, 0.003400, 0.002800, 0.002200, 0.001600, 0.001000, 0.000850, 0.000700, 0.000550, 0.000400, 0.000250];
-                return reversedDensities[ballType] || defaultDensity;
+                const baseDensities = [0.004000, 0.003400, 0.002800, 0.002200, 0.001600, 0.001000, 0.000850, 0.000700, 0.000550, 0.000400, 0.000250];
+                const reversedBaseDensity = baseDensities[ballType] || defaultDensity;
+                // Apply range multiplier to the difference from default
+                const reversedDifference = reversedBaseDensity - defaultDensity;
+                return defaultDensity + (reversedDifference * rangeMultiplier);
                 
             case 2: // Random - fixed random density per size (consistent across game session)
-                if (!this.randomDensities) {
-                    // Generate random densities for each ball type (0-10)
-                    // Use same balanced range as reversed mode: 0.000250 to 0.004000
-                    const minDensity = 0.000250;
-                    const maxDensity = 0.004000;
+                if (!this.randomDensities || this.lastRangeMultiplier !== rangeMultiplier) {
+                    // Regenerate if range multiplier changed
+                    this.lastRangeMultiplier = rangeMultiplier;
+                    // Base range: 0.000250 to 0.004000, adjusted by range multiplier
+                    const baseMinDensity = 0.000250;
+                    const baseMaxDensity = 0.004000;
+                    const minDifference = baseMinDensity - defaultDensity;
+                    const maxDifference = baseMaxDensity - defaultDensity;
+                    const minDensity = defaultDensity + (minDifference * rangeMultiplier);
+                    const maxDensity = defaultDensity + (maxDifference * rangeMultiplier);
+                    
                     this.randomDensities = [];
                     for (let i = 0; i < 11; i++) {
                         this.randomDensities[i] = minDensity + Math.random() * (maxDensity - minDensity);
@@ -72,9 +88,13 @@ export class BallFactory {
                 return this.randomDensities[ballType];
                 
             case 3: // Super Random - completely random density for each ball
-                // Use same balanced range as reversed mode: 0.000250 to 0.004000
-                const minDensity = 0.000250;
-                const maxDensity = 0.004000;
+                // Base range: 0.000250 to 0.004000, adjusted by range multiplier
+                const baseMinDensity = 0.000250;
+                const baseMaxDensity = 0.004000;
+                const minDifference = baseMinDensity - defaultDensity;
+                const maxDifference = baseMaxDensity - defaultDensity;
+                const minDensity = defaultDensity + (minDifference * rangeMultiplier);
+                const maxDensity = defaultDensity + (maxDifference * rangeMultiplier);
                 return minDensity + Math.random() * (maxDensity - minDensity);
                 
             default:
@@ -113,8 +133,10 @@ export class BallFactory {
         
         // Debug logging for ball weight
         const weightMode = this.settings.getSetting('physics', 'ballWeight');
+        const weightRange = this.settings.getSetting('physics', 'ballWeightRange') || 1;
         const weightModeNames = ['Default', 'Reversed', 'Random', 'Super Random'];
-        console.log(`Ball spawned - Type: ${type}, Density: ${physicsOverrides.density.toFixed(6)}, Weight Mode: ${weightModeNames[weightMode]}`);
+        const weightRangeNames = ['Narrow', 'Default', 'Wide'];
+        console.log(`Ball spawned - Type: ${type}, Density: ${physicsOverrides.density.toFixed(6)}, Weight Mode: ${weightModeNames[weightMode]}, Range: ${weightRangeNames[weightRange]}`);
         
         // Emit ball creation event
         this.eventSystem.emit('ball:created', {

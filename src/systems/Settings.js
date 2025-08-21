@@ -13,7 +13,8 @@ export class Settings {
                 gravity: 1,    // 0 = low, 1 = medium, 2 = high
                 friction: 1,   // 0 = low, 1 = medium, 2 = high
                 ballSize: 1,   // 0 = small (0.5x), 1 = medium (1x), 2 = large (1.5x)
-                ballWeight: 0  // 0 = default, 1 = reversed, 2 = random, 3 = super random
+                ballWeight: 0, // 0 = default, 1 = reversed, 2 = random, 3 = super random
+                ballWeightRange: 1 // 0 = narrow, 1 = default, 2 = wide
             },
             audio: {
                 muted: false // Whether all audio is muted
@@ -168,7 +169,8 @@ export class Settings {
                 gravity: 1,
                 friction: 1,
                 ballSize: 1,
-                ballWeight: 0
+                ballWeight: 0,
+                ballWeightRange: 1
             },
             audio: {
                 muted: false
@@ -194,7 +196,8 @@ export class Settings {
             gravity: ['Low', 'Medium', 'High'],
             friction: ['Low', 'Medium', 'High'],
             ballSize: ['Small', 'Medium', 'Large'],
-            ballWeight: ['Default', 'Reversed', 'Random', 'Super Random']
+            ballWeight: ['Default', 'Reversed', 'Random', 'Super Random'],
+            ballWeightRange: ['Narrow', 'Default', 'Wide']
         };
     }
     

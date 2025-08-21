@@ -245,6 +245,11 @@ export const GAME_CONFIG = {
             { mode: 'reversed', name: 'Reversed' },      // Smaller balls heavier, larger balls lighter
             { mode: 'random', name: 'Random' },          // Fixed random density per size (set at game start)
             { mode: 'superRandom', name: 'Super Random' } // Random density for each dropped ball
+        ],
+        BALLWEIGHTRANGE: [
+            { multiplier: 0.5, name: 'Narrow' },   // Half the density range differences
+            { multiplier: 1.0, name: 'Default' },  // Normal density range
+            { multiplier: 2.0, name: 'Wide' }      // Double the density range differences
         ]
     }
 };
