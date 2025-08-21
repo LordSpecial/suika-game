@@ -29,6 +29,18 @@ export class RenderingController {
             return;
         }
         
+        // Clear the canvas and physics world before rendering menu
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        this.game.physics.clearWorld();
+        
+        // Hide HTML UI elements (score, next ball, etc.)
+        if (this.game.elements.score) {
+            this.game.elements.score.style.display = 'none';
+        }
+        if (this.game.elements.nextBall) {
+            this.game.elements.nextBall.style.display = 'none';
+        }
+        
         // Render appropriate menu immediately first
         if (this.game.stateMachine.isInState('MENU')) {
             this.game.menu.render(ctx, this.game.gameWidth, this.game.gameHeight);
