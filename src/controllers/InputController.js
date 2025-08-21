@@ -9,6 +9,20 @@ export class InputController {
         this.game = game;
         this.menuEventHandlers = null;
         this.gameEventHandlers = null;
+        this.lastActionTime = 0;
+        this.actionDebounceMs = 200; // 200ms debounce
+    }
+    
+    /**
+     * Check if enough time has passed since last action to prevent double-firing
+     */
+    canPerformAction() {
+        const now = Date.now();
+        if (now - this.lastActionTime < this.actionDebounceMs) {
+            return false;
+        }
+        this.lastActionTime = now;
+        return true;
     }
     
     /**
@@ -29,6 +43,7 @@ export class InputController {
                     this.game.playSound('click');
                     this.game.stateMachine.transition('READY', { fromMenu: true });
                 } else if (action === 'openSettings') {
+                    if (!this.canPerformAction()) return;
                     this.game.playSound('click');
                     this.game.stateMachine.transition('SETTINGS');
                 } else if (action === 'toggleMute') {
@@ -178,6 +193,7 @@ export class InputController {
                 x <= homeButtonBounds.x + homeButtonBounds.width &&
                 y >= homeButtonBounds.y && 
                 y <= homeButtonBounds.y + homeButtonBounds.height) {
+                if (!this.canPerformAction()) return;
                 this.game.goToMenu();
                 return;
             }
@@ -223,6 +239,7 @@ export class InputController {
                 x <= homeButtonBounds.x + homeButtonBounds.width &&
                 y >= homeButtonBounds.y && 
                 y <= homeButtonBounds.y + homeButtonBounds.height) {
+                if (!this.canPerformAction()) return;
                 this.game.goToMenu();
                 return;
             }
