@@ -49,14 +49,14 @@ export class SettingsMenu {
      */
     renderMainSettings(ctx, gameWidth, gameHeight, scale) {
         const centerX = gameWidth / 2;
-        let currentY = gameHeight * 0.2;
+        let currentY = gameHeight * 0.12;  // Raised from 0.2 to 0.12
         const buttonHeight = 64 * scale;
         const buttonWidth = Math.min(400 * scale, gameWidth * 0.8);  // Responsive width
         const spacing = 20 * scale;
         
         // Title with outline
         this.renderer.drawTextWithOutline('Settings', centerX, currentY, {
-            font: `900 ${38 * scale}px 'Azeret Mono', monospace`,  // Increased from 32
+            font: `900 ${48 * scale}px 'Azeret Mono', monospace`,  // Increased from 38 to 48
             fillStyle: '#FFFFFF',
             textAlign: 'center',
             textBaseline: 'middle',
@@ -70,16 +70,16 @@ export class SettingsMenu {
         this.drawButton(ctx, centerX - buttonWidth/2, currentY, buttonWidth, buttonHeight, 'Themes', 'themes');
         currentY += buttonHeight + spacing + (30 * scale);  // Extra spacing before Physics section
         
-        // Define scrollable viewport with padding - same width as buttons
-        const viewportPadding = 15 * scale;
+        // Define scrollable viewport with padding - wider for larger buttons
+        const viewportPadding = 20 * scale;
         const viewportTop = currentY;
-        const viewportBottom = gameHeight * 0.85 - buttonHeight - spacing;
+        const viewportBottom = gameHeight * 0.82 - buttonHeight - spacing;  // More space for larger controls
         const viewportHeight = viewportBottom - viewportTop;
-        const viewportLeft = centerX - buttonWidth/2; // Same as button positioning
-        const viewportWidth = buttonWidth; // Same width as buttons
+        const viewportLeft = centerX - (buttonWidth * 0.675); // Adjusted for smaller container (90% of 0.75)
+        const viewportWidth = buttonWidth * 1.35; // Reduced from 1.5 to 1.35 (90% of previous)
         
-        // Calculate content height
-        const physicsControlsHeight = 4 * 110 * scale + 50 * scale; // 4 settings + title
+        // Calculate content height with larger buttons and increased spacing
+        const physicsControlsHeight = 4 * 160 * scale + 80 * scale + (3 * 60 * scale); // 4 settings + increased title spacing + 3 extra spacings
         const contentHeight = physicsControlsHeight;
         
         // Update scroll boundaries
@@ -126,14 +126,14 @@ export class SettingsMenu {
         
         // Physics settings title with outline (now scrollable)
         this.renderer.drawTextWithOutline('Physics', centerX, currentY + 20 * scale, {
-            font: `700 ${29 * scale}px 'Azeret Mono', monospace`,
+            font: `700 ${38 * scale}px 'Azeret Mono', monospace`,  // Increased from 29 to 38
             fillStyle: '#FFFFFF',
             textAlign: 'center',
             textBaseline: 'middle',
             outlineColor: '#000000',
             outlineWidth: 2
         });
-        currentY += 50 * scale;
+        currentY += 80 * scale;  // Increased from 50 to 80 for more space after Physics title
         
         // Physics controls (now scrollable)
         this.renderPhysicsControls(ctx, centerX, currentY, scale, gameWidth);
@@ -160,9 +160,9 @@ export class SettingsMenu {
     renderPhysicsControls(ctx, centerX, startY, scale, gameWidth) {
         const physics = this.settings.settings.physics;
         const presetNames = this.settings.getPhysicsPresetNames();
-        const controlSpacing = 110 * scale;  // Extra vertical spacing
-        const buttonSize = 60 * scale;  // Increased from 40
-        const buttonSpacing = Math.min(90 * scale, gameWidth / 5);  // Responsive spacing, increased
+        const controlSpacing = 140 * scale;  // Increased vertical spacing for better readability
+        const buttonSize = 120 * scale;  // Doubled from 60
+        const buttonSpacing = Math.min(140 * scale, gameWidth / 4);  // Increased spacing for larger buttons
         
         let currentY = startY;
         
@@ -170,7 +170,7 @@ export class SettingsMenu {
             // Label with outline
             const label = type === 'ballSize' ? 'Ball Size' : type.charAt(0).toUpperCase() + type.slice(1);
             this.renderer.drawTextWithOutline(label, centerX, currentY, {
-                font: `700 ${22 * scale}px 'Azeret Mono', monospace`,  // Increased from 18
+                font: `700 ${32 * scale}px 'Azeret Mono', monospace`,  // Increased from 22 to 32
                 fillStyle: '#FFFFFF',
                 textAlign: 'center',
                 textBaseline: 'middle',
@@ -181,7 +181,7 @@ export class SettingsMenu {
             // Three option buttons
             for (let i = 0; i < 3; i++) {
                 const x = centerX - buttonSpacing + (i * buttonSpacing);
-                const y = currentY + 15 * scale;
+                const y = currentY + 35 * scale;  // Increased from 15 to 35 for more space between label and buttons
                 const isSelected = physics[type] === i;
                 
                 // Button background with rounded corners
@@ -193,7 +193,7 @@ export class SettingsMenu {
                 
                 // Button text
                 this.renderer.drawText(presetNames[type][i], x, y + buttonSize/2, {
-                    font: `700 ${14 * scale}px 'Azeret Mono', monospace`,  // Increased from 12
+                    font: `700 ${28 * scale}px 'Azeret Mono', monospace`,  // Doubled from 14 to match larger buttons
                     fillStyle: isSelected ? '#FFFFFF' : '#333',
                     textAlign: 'center',
                     textBaseline: 'middle'
@@ -215,8 +215,8 @@ export class SettingsMenu {
             currentY += controlSpacing;
             
             // Add extra spacing between different physics settings
-            if (type !== 'friction') {
-                currentY += 20 * scale;
+            if (type !== 'ballSize') {  // Changed from 'friction' to add spacing after all settings except the last
+                currentY += 60 * scale;  // Increased from 40 to 60 for even more spacing
             }
         });
     }
@@ -226,14 +226,14 @@ export class SettingsMenu {
      */
     renderThemeSettings(ctx, gameWidth, gameHeight, scale) {
         const centerX = gameWidth / 2;
-        let currentY = gameHeight * 0.15;
+        let currentY = gameHeight * 0.16;  // Moved further down from 0.12 to 0.16
         const buttonHeight = 64 * scale;
         const buttonWidth = gameWidth * 0.8;  // Use 80% of window width
         const spacing = 20 * scale;
         
         // Title with outline
         this.renderer.drawTextWithOutline('Themes', centerX, currentY, {
-            font: `900 ${38 * scale}px 'Azeret Mono', monospace`,  // Increased from 32
+            font: `900 ${48 * scale}px 'Azeret Mono', monospace`,  // Increased from 38 to 48 to match Settings title
             fillStyle: '#FFFFFF',
             textAlign: 'center',
             textBaseline: 'middle',
@@ -242,6 +242,17 @@ export class SettingsMenu {
         });
         
         currentY += 60 * scale;
+        
+        // Balls subheading
+        this.renderer.drawTextWithOutline('Balls', centerX, currentY, {
+            font: `700 ${32 * scale}px 'Azeret Mono', monospace`,
+            fillStyle: '#FFFFFF',
+            textAlign: 'center',
+            textBaseline: 'middle',
+            outlineColor: '#000000',
+            outlineWidth: 2
+        });
+        currentY += 35 * scale;  // Decreased from 50 to 35
         
         // Ball theme selector
         const currentBallSelection = this.settings.settings.theme.balls;
@@ -253,11 +264,22 @@ export class SettingsMenu {
             currentY, 
             buttonWidth, 
             buttonHeight, 
-            `Ball Theme: ${ballDisplayName}`,
+            ballDisplayName,
             'theme_category',
             'balls'
         );
-        currentY += buttonHeight + spacing;
+        currentY += buttonHeight + spacing + (30 * scale);
+        
+        // Backgrounds subheading
+        this.renderer.drawTextWithOutline('Backgrounds', centerX, currentY, {
+            font: `700 ${32 * scale}px 'Azeret Mono', monospace`,
+            fillStyle: '#FFFFFF',
+            textAlign: 'center',
+            textBaseline: 'middle',
+            outlineColor: '#000000',
+            outlineWidth: 2
+        });
+        currentY += 35 * scale;  // Decreased from 50 to 35
         
         // Background theme selector
         const currentBgSelection = this.settings.settings.theme.background;
@@ -269,7 +291,7 @@ export class SettingsMenu {
             currentY, 
             buttonWidth, 
             buttonHeight, 
-            `Background: ${bgDisplayName}`,
+            bgDisplayName,
             'theme_category',
             'background'
         );
@@ -294,7 +316,7 @@ export class SettingsMenu {
         
         // Button text
         this.renderer.drawText(text, x + width/2, y + height/2, {
-            font: `700 ${22 * this.scalingSystem.getScale()}px 'Azeret Mono', monospace`,  // Increased from 18
+            font: `700 ${28 * this.scalingSystem.getScale()}px 'Azeret Mono', monospace`,  // Increased from 22 to 28
             fillStyle: '#FFFFFF',
             textAlign: 'center',
             textBaseline: 'middle'
