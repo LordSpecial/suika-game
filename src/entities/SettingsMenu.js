@@ -327,13 +327,10 @@ export class SettingsMenu {
                 default: 'Default', 
                 space: 'Space',
                 chalky: 'Chalky',
-                patches: 'Patches',
                 paua: 'Paua',
-                rainbow: 'Rainbow',
                 skelly: 'Skelly',
                 stars: 'Stars',
                 cottonee: 'Cottonee',
-                fishies: 'Fishies',
                 whimsigoth: 'Whimsigoth'
             },
             sounds: { default: 'Default' }
@@ -513,7 +510,7 @@ export class SettingsMenu {
     cycleThemeOption(category) {
         const options = {
             balls: ['realFruits', 'cartoonFruits', 'planets', 'buttons', 'iceCream'],
-            background: ['default', 'space', 'chalky', 'patches', 'paua', 'rainbow', 'skelly', 'stars', 'cottonee', 'fishies', 'whimsigoth'],
+            background: ['default', 'space', 'chalky', 'paua', 'skelly', 'stars', 'cottonee', 'whimsigoth'],
             sounds: ['default']
         };
         

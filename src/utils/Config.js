@@ -189,19 +189,9 @@ export const GAME_CONFIG = {
                 background: './assets/img/backgrounds/Chalky.jpg',
                 menuBackground: './assets/img/bg-menu.png'
             },
-            patches: {
-                name: 'Patches',
-                background: './assets/img/backgrounds/Patches.jpg',
-                menuBackground: './assets/img/bg-menu.png'
-            },
             paua: {
                 name: 'Paua',
                 background: './assets/img/backgrounds/Paua.jpg',
-                menuBackground: './assets/img/bg-menu.png'
-            },
-            rainbow: {
-                name: 'Rainbow',
-                background: './assets/img/backgrounds/Rainbow.jpg',
                 menuBackground: './assets/img/bg-menu.png'
             },
             skelly: {
@@ -217,11 +207,6 @@ export const GAME_CONFIG = {
             cottonee: {
                 name: 'Cottonee',
                 background: './assets/img/backgrounds/cottonee.jpg',
-                menuBackground: './assets/img/bg-menu.png'
-            },
-            fishies: {
-                name: 'Fishies',
-                background: './assets/img/backgrounds/fishies.jpg',
                 menuBackground: './assets/img/bg-menu.png'
             },
             whimsigoth: {
