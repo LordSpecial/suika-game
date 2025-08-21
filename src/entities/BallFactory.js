@@ -41,6 +41,48 @@ export class BallFactory {
     }
     
     /**
+     * Calculate density based on ball weight setting
+     * @param {number} ballType - Ball type index (0-10)
+     * @returns {number} Density value
+     */
+    calculateDensity(ballType) {
+        const ballWeight = this.settings.getSetting('physics', 'ballWeight');
+        const defaultDensity = 0.001; // Default Matter.js density
+        
+        switch (ballWeight) {
+            case 0: // Default - all balls same density
+                return defaultDensity;
+                
+            case 1: // Reversed - smaller balls heavier, larger balls lighter (balanced symmetric)
+                // Pre-calculated balanced densities: 4x heavier to 4x lighter, symmetric around 1.0x
+                const reversedDensities = [0.004000, 0.003400, 0.002800, 0.002200, 0.001600, 0.001000, 0.000850, 0.000700, 0.000550, 0.000400, 0.000250];
+                return reversedDensities[ballType] || defaultDensity;
+                
+            case 2: // Random - fixed random density per size (consistent across game session)
+                if (!this.randomDensities) {
+                    // Generate random densities for each ball type (0-10)
+                    // Use same balanced range as reversed mode: 0.000250 to 0.004000
+                    const minDensity = 0.000250;
+                    const maxDensity = 0.004000;
+                    this.randomDensities = [];
+                    for (let i = 0; i < 11; i++) {
+                        this.randomDensities[i] = minDensity + Math.random() * (maxDensity - minDensity);
+                    }
+                }
+                return this.randomDensities[ballType];
+                
+            case 3: // Super Random - completely random density for each ball
+                // Use same balanced range as reversed mode: 0.000250 to 0.004000
+                const minDensity = 0.000250;
+                const maxDensity = 0.004000;
+                return minDensity + Math.random() * (maxDensity - minDensity);
+                
+            default:
+                return defaultDensity;
+        }
+    }
+
+    /**
      * Create a ball with specified type and position
      * @param {number} type - Ball type index
      * @param {number} x - X position
@@ -55,13 +97,24 @@ export class BallFactory {
         
         const ballData = this.scaledBalls[type];
         
+        // Calculate density based on weight mode unless overridden
+        const physicsOverrides = { ...options.physicsOverrides };
+        if (physicsOverrides.density === undefined) {
+            physicsOverrides.density = this.calculateDensity(type);
+        }
+        
         const ball = this.physics.createBall(
             x, 
             y, 
             ballData, 
             options.physicsConfig || {},
-            options.physicsOverrides || {}
+            physicsOverrides
         );
+        
+        // Debug logging for ball weight
+        const weightMode = this.settings.getSetting('physics', 'ballWeight');
+        const weightModeNames = ['Default', 'Reversed', 'Random', 'Super Random'];
+        console.log(`Ball spawned - Type: ${type}, Density: ${physicsOverrides.density.toFixed(6)}, Weight Mode: ${weightModeNames[weightMode]}`);
         
         // Emit ball creation event
         this.eventSystem.emit('ball:created', {

@@ -239,6 +239,12 @@ export const GAME_CONFIG = {
             { friction: 0.1, frictionStatic: 0.1, name: 'Low' },     // Very slippery - balls slide a lot
             { friction: 0.8, frictionStatic: 0.8, name: 'Medium' },  // Default/Medium (unchanged)
             { friction: 1.5, frictionStatic: 1.5, name: 'High' }     // Very grippy - balls stick strongly
+        ],
+        BALLWEIGHT: [
+            { mode: 'default', name: 'Default' },        // Normal density (0.001)
+            { mode: 'reversed', name: 'Reversed' },      // Smaller balls heavier, larger balls lighter
+            { mode: 'random', name: 'Random' },          // Fixed random density per size (set at game start)
+            { mode: 'superRandom', name: 'Super Random' } // Random density for each dropped ball
         ]
     }
 };

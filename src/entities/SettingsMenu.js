@@ -79,7 +79,12 @@ export class SettingsMenu {
         const viewportWidth = buttonWidth * 1.35; // Reduced from 1.5 to 1.35 (90% of previous)
         
         // Calculate content height with larger buttons and increased spacing
-        const physicsControlsHeight = 4 * 160 * scale + 80 * scale + (3 * 60 * scale); // 4 settings + increased title spacing + 3 extra spacings
+        // 5 settings now: bounciness, gravity, friction, ballSize (4 standard) + ballWeight (2x2 grid with larger buttons)
+        // ballWeight needs extra space for the 2x2 grid layout and 30% larger buttons
+        const standardSettingHeight = 160 * scale; // Standard setting with label + buttons + spacing
+        const ballWeightButtonSize = 120 * scale * 1.3; // 30% larger buttons
+        const ballWeightExtraHeight = (ballWeightButtonSize * 0.6) + 40 * scale; // Additional height for larger 2x2 grid + extra spacing
+        const physicsControlsHeight = 5 * standardSettingHeight + ballWeightExtraHeight + 80 * scale + (4 * 60 * scale); // 5 settings + extra for larger ballWeight + title spacing + 4 extra spacings
         const contentHeight = physicsControlsHeight;
         
         // Update scroll boundaries
@@ -166,9 +171,11 @@ export class SettingsMenu {
         
         let currentY = startY;
         
-        ['bounciness', 'gravity', 'friction', 'ballSize'].forEach(type => {
+        ['bounciness', 'gravity', 'friction', 'ballSize', 'ballWeight'].forEach(type => {
             // Label with outline
-            const label = type === 'ballSize' ? 'Ball Size' : type.charAt(0).toUpperCase() + type.slice(1);
+            const label = type === 'ballSize' ? 'Ball Size' : 
+                         type === 'ballWeight' ? 'Ball Weight' : 
+                         type.charAt(0).toUpperCase() + type.slice(1);
             this.renderer.drawTextWithOutline(label, centerX, currentY, {
                 font: `700 ${32 * scale}px 'Azeret Mono', monospace`,  // Increased from 22 to 32
                 fillStyle: '#FFFFFF',
@@ -178,44 +185,115 @@ export class SettingsMenu {
                 outlineWidth: 2
             });
             
-            // Three option buttons
-            for (let i = 0; i < 3; i++) {
-                const x = centerX - buttonSpacing + (i * buttonSpacing);
-                const y = currentY + 35 * scale;  // Increased from 15 to 35 for more space between label and buttons
-                const isSelected = physics[type] === i;
+            // Render buttons - 2x2 grid for ballWeight, horizontal row for others
+            if (type === 'ballWeight') {
+                // 2x2 grid for 4 ball weight options with larger buttons
+                const ballWeightButtonSize = buttonSize * 1.3; // 30% larger than standard buttons
+                const gridSpacing = ballWeightButtonSize + (25 * scale);
+                const gridStartX = centerX - gridSpacing/2;
+                const gridStartY = currentY + 35 * scale;
                 
-                // Button background with rounded corners
-                const smallRadius = 5 * scale;
-                this.renderer.fillRoundRect(x - buttonSize/2, y, buttonSize, buttonSize, smallRadius, isSelected ? '#FF8800' : '#E0E0E0');
-                
-                // Button border with rounded corners
-                this.renderer.strokeRoundRect(x - buttonSize/2, y, buttonSize, buttonSize, smallRadius, isSelected ? '#FF6E00' : '#CCC', 2);
-                
-                // Button text
-                this.renderer.drawText(presetNames[type][i], x, y + buttonSize/2, {
-                    font: `700 ${28 * scale}px 'Azeret Mono', monospace`,  // Doubled from 14 to match larger buttons
-                    fillStyle: isSelected ? '#FFFFFF' : '#333',
-                    textAlign: 'center',
-                    textBaseline: 'middle'
-                });
-                
-                // Store clickable area with scroll adjustment
-                this.clickableElements.push({
-                    x: x - buttonSize/2,
-                    y: y + this.scrollOffset, // Adjust for scroll
-                    width: buttonSize,
-                    height: buttonSize,
-                    action: 'physics',
-                    type: type,
-                    value: i,
-                    scrollable: true // Mark as scrollable
-                });
+                for (let i = 0; i < 4; i++) {
+                    const row = Math.floor(i / 2);
+                    const col = i % 2;
+                    const x = gridStartX + (col * gridSpacing);
+                    const y = gridStartY + (row * gridSpacing);
+                    const isSelected = physics[type] === i;
+                    
+                    // Button background with rounded corners
+                    const smallRadius = 8 * scale; // Slightly larger radius for bigger buttons
+                    this.renderer.fillRoundRect(x - ballWeightButtonSize/2, y, ballWeightButtonSize, ballWeightButtonSize, smallRadius, isSelected ? '#FF8800' : '#E0E0E0');
+                    
+                    // Button border with rounded corners
+                    this.renderer.strokeRoundRect(x - ballWeightButtonSize/2, y, ballWeightButtonSize, ballWeightButtonSize, smallRadius, isSelected ? '#FF6E00' : '#CCC', 3);
+                    
+                    // Handle "Super Random" as two lines, others as single line
+                    const buttonText = presetNames[type][i];
+                    if (buttonText === 'Super Random') {
+                        // Draw "Super" on first line
+                        this.renderer.drawText('Super', x, y + ballWeightButtonSize/2 - 12 * scale, {
+                            font: `700 ${24 * scale}px 'Azeret Mono', monospace`,
+                            fillStyle: isSelected ? '#FFFFFF' : '#333',
+                            textAlign: 'center',
+                            textBaseline: 'middle'
+                        });
+                        // Draw "Random" on second line
+                        this.renderer.drawText('Random', x, y + ballWeightButtonSize/2 + 12 * scale, {
+                            font: `700 ${24 * scale}px 'Azeret Mono', monospace`,
+                            fillStyle: isSelected ? '#FFFFFF' : '#333',
+                            textAlign: 'center',
+                            textBaseline: 'middle'
+                        });
+                    } else {
+                        // Single line text for other buttons
+                        this.renderer.drawText(buttonText, x, y + ballWeightButtonSize/2, {
+                            font: `700 ${28 * scale}px 'Azeret Mono', monospace`,
+                            fillStyle: isSelected ? '#FFFFFF' : '#333',
+                            textAlign: 'center',
+                            textBaseline: 'middle'
+                        });
+                    }
+                    
+                    // Store clickable area (absolute coordinates)
+                    this.clickableElements.push({
+                        x: x - ballWeightButtonSize/2,
+                        y: y, // Store absolute Y coordinate
+                        width: ballWeightButtonSize,
+                        height: ballWeightButtonSize,
+                        action: 'physics',
+                        type: type,
+                        value: i,
+                        scrollable: true // Mark as scrollable
+                    });
+                }
+            } else {
+                // Horizontal row for 3 options (existing settings)
+                for (let i = 0; i < 3; i++) {
+                    const x = centerX - buttonSpacing + (i * buttonSpacing);
+                    const y = currentY + 35 * scale;  // Increased from 15 to 35 for more space between label and buttons
+                    const isSelected = physics[type] === i;
+                    
+                    // Button background with rounded corners
+                    const smallRadius = 5 * scale;
+                    this.renderer.fillRoundRect(x - buttonSize/2, y, buttonSize, buttonSize, smallRadius, isSelected ? '#FF8800' : '#E0E0E0');
+                    
+                    // Button border with rounded corners
+                    this.renderer.strokeRoundRect(x - buttonSize/2, y, buttonSize, buttonSize, smallRadius, isSelected ? '#FF6E00' : '#CCC', 2);
+                    
+                    // Button text
+                    this.renderer.drawText(presetNames[type][i], x, y + buttonSize/2, {
+                        font: `700 ${28 * scale}px 'Azeret Mono', monospace`,  // Doubled from 14 to match larger buttons
+                        fillStyle: isSelected ? '#FFFFFF' : '#333',
+                        textAlign: 'center',
+                        textBaseline: 'middle'
+                    });
+                    
+                    // Store clickable area (absolute coordinates)
+                    this.clickableElements.push({
+                        x: x - buttonSize/2,
+                        y: y, // Store absolute Y coordinate
+                        width: buttonSize,
+                        height: buttonSize,
+                        action: 'physics',
+                        type: type,
+                        value: i,
+                        scrollable: true // Mark as scrollable
+                    });
+                }
             }
             
-            currentY += controlSpacing;
+            // Adjust spacing based on layout type
+            if (type === 'ballWeight') {
+                // 2x2 grid needs more vertical space, accounting for larger buttons
+                const ballWeightButtonSize = buttonSize * 1.3;
+                currentY += controlSpacing + (ballWeightButtonSize * 0.6); // Add extra space for second row and larger buttons
+            } else {
+                // Standard horizontal layout
+                currentY += controlSpacing;
+            }
             
             // Add extra spacing between different physics settings
-            if (type !== 'ballSize') {  // Changed from 'friction' to add spacing after all settings except the last
+            if (type !== 'ballWeight') {  // ballWeight is now the last setting
                 currentY += 60 * scale;  // Increased from 40 to 60 for even more spacing
             }
         });
@@ -479,11 +557,11 @@ export class SettingsMenu {
      */
     handleClick(x, y) {
         for (const element of this.clickableElements) {
-            // Adjust y coordinate for scrollable elements
-            const elementY = element.scrollable ? element.y - this.scrollOffset : element.y;
+            // For scrollable elements, adjust the click coordinate to match the element's absolute position
+            const adjustedY = element.scrollable ? y + this.scrollOffset : y;
             
             if (x >= element.x && x <= element.x + element.width &&
-                y >= elementY && y <= elementY + element.height) {
+                adjustedY >= element.y && adjustedY <= element.y + element.height) {
                 
                 // Check if click is within viewport for scrollable elements
                 if (element.scrollable && this.scrollViewport) {

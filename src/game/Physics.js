@@ -174,6 +174,7 @@ export class Physics {
             frictionStatic: physicsOverrides.frictionStatic || PHYSICS.frictionStatic,
             frictionAir: PHYSICS.frictionAir,
             restitution: physicsOverrides.restitution || PHYSICS.restitution,
+            density: physicsOverrides.density || 0.001, // Default Matter.js density
             ...extraConfig,
             render: { 
                 sprite: { 

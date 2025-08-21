@@ -12,7 +12,8 @@ export class Settings {
                 bounciness: 1, // 0 = low, 1 = medium, 2 = high
                 gravity: 1,    // 0 = low, 1 = medium, 2 = high
                 friction: 1,   // 0 = low, 1 = medium, 2 = high
-                ballSize: 1    // 0 = small (0.5x), 1 = medium (1x), 2 = large (1.5x)
+                ballSize: 1,   // 0 = small (0.5x), 1 = medium (1x), 2 = large (1.5x)
+                ballWeight: 0  // 0 = default, 1 = reversed, 2 = random, 3 = super random
             },
             audio: {
                 muted: false // Whether all audio is muted
@@ -109,10 +110,14 @@ export class Settings {
      * Update physics setting
      */
     setPhysics(category, value) {
-        if (this.settings.physics[category] !== undefined && value >= 0 && value <= 2) {
-            this.settings.physics[category] = value;
-            this.saveSettings();
-            return true;
+        if (this.settings.physics[category] !== undefined && value >= 0) {
+            // Different categories have different ranges
+            const maxValue = category === 'ballWeight' ? 3 : 2;
+            if (value <= maxValue) {
+                this.settings.physics[category] = value;
+                this.saveSettings();
+                return true;
+            }
         }
         return false;
     }
@@ -162,7 +167,8 @@ export class Settings {
                 bounciness: 1,
                 gravity: 1,
                 friction: 1,
-                ballSize: 1
+                ballSize: 1,
+                ballWeight: 0
             },
             audio: {
                 muted: false
@@ -187,7 +193,8 @@ export class Settings {
             bounciness: ['Low', 'Medium', 'High'],
             gravity: ['Low', 'Medium', 'High'],
             friction: ['Low', 'Medium', 'High'],
-            ballSize: ['Small', 'Medium', 'Large']
+            ballSize: ['Small', 'Medium', 'Large'],
+            ballWeight: ['Default', 'Reversed', 'Random', 'Super Random']
         };
     }
     
